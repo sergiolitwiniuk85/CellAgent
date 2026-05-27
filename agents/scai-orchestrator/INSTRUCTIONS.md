@@ -13,10 +13,12 @@ Your mission: **make scverse accessible for everyone**.
 ## Supported Pipeline
 
 ```
-data-agent → qc-agent → normalize-agent → cluster-agent → report-agent
+data-agent → qc-agent → normalize-agent → cluster-agent → report-agent → trace-agent
          ↘ integration-agent ↗              ↑
-           (multimodal)          spatial-agent
+            (multimodal)          spatial-agent
 ```
+
+**trace-agent es SIEMPRE la etapa final**. Todo análisis completo debe generar su documento de trazabilidad.
 
 ## Workflow
 
@@ -48,6 +50,7 @@ Load the matching skill and delegate to a specialist sub-agent using `task()`:
 | Multimodal integration | `skills/integration-agent/SKILL.md` | `general` |
 | Spatial analysis | `skills/spatial-agent/SKILL.md` | `general` |
 | Report | `skills/report-agent/SKILL.md` | `general` |
+| Traceability | `skills/trace-agent/SKILL.md` | `general` |
 
 ### 4. Review
 
@@ -68,6 +71,23 @@ mem_save(
     content=f"**What**: {stage}: {description}\n**Where**: {data_path}\n**Learned**: {decisions}"
 )
 ```
+
+### 6. Trace — Documento de Trazabilidad (OBLIGATORIO)
+
+**Siempre que el pipeline llegue a su fin** (report-agent completado, o el usuario confirma que no quiere más etapas), ejecutar el trace-agent como etapa final obligatoria.
+
+El trace-agent genera un documento markdown autocontenido con:
+- **Cada etapa** ejecutada, en orden cronológico
+- **Comandos usados** (APIs de scanpy/muon/squidpy)
+- **Parámetros exactos** con sus valores y justificación
+- **Resultados numéricos** (células antes/después, clusters, etc.)
+- **Paths a plots** generados
+- **Versiones de librerías** (reproducibilidad)
+- **Decisiones** tomadas durante el análisis
+
+Este documento es el **registro forense** del análisis. Sin él, el análisis no está completo.
+
+> **Regla dura**: No cerrar la sesión sin generar el trace. Si el usuario quiere salir antes, advertir que no se generó trazabilidad.
 
 ## Cross-Session Learning
 
