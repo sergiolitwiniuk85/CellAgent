@@ -1,0 +1,7 @@
+output/
+*.h5ad
+*.h5mu
+*.zarr
+__pycache__/
+*.pyc
+.env

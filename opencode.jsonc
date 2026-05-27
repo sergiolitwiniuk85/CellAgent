@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/opencode-ai/opencode/main/config.schema.json",
+  "agents": {
+    "scai-orchestrator": {
+      "model": {
+        "provider": "anthropic",
+        "model": "claude-sonnet-4-20250514"
+      },
+      "instructions": "agents/scai-orchestrator/INSTRUCTIONS.md",
+      "description": "SCAI orchestrator — guides single-cell analysis through specialist agents"
+    }
+  },
+  "skills": {
+    "scai/_shared/pipeline-state.md": true,
+    "scai/data-agent/SKILL.md": true,
+    "scai/qc-agent/SKILL.md": true,
+    "scai/normalize-agent/SKILL.md": true,
+    "scai/cluster-agent/SKILL.md": true,
+    "scai/integration-agent/SKILL.md": true,
+    "scai/spatial-agent/SKILL.md": true,
+    "scai/report-agent/SKILL.md": true
+  }
+}
