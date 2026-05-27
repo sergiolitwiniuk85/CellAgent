@@ -1,28 +1,50 @@
-# SCAI — Single Cell AI Framework
+# CellAgent — Single Cell AI Framework
 
 ## Installation
 
+Choose your method:
+
+### Option A: Conda (recommended for daily use)
+
 ```bash
-# 1. Clone the repo
-git clone https://github.com/YOUR_USERNAME/scai.git
-cd scai
+git clone https://github.com/sergiolitwiniuk85/CellAgent.git
+cd CellAgent
 
-# 2. Install Python dependencies
-pip install scanpy muon squidpy spatialdata anndata mudata leidenalg
+conda create -n cellagent -c conda-forge \
+  python=3.12 \
+  scanpy=1.12 \
+  muon=0.1.7 \
+  squidpy=1.8.1 \
+  spatialdata=0.7.3 \
+  spatialdata-plot=0.4.0 \
+  mudata=0.3.8 \
+  leidenalg=0.12.0
 
-# 3. You're done. Run SCAI:
+conda activate cellagent
 opencode --agent scai-orchestrator
 ```
 
-### Prerequisites
+### Option B: Docker (fully isolated)
 
-- [OpenCode](https://opencode.ai) installed and configured
-- Python 3.10+ with scverse packages
-- A GitHub PAT for cloning (or public repo)
+```bash
+docker build -t cellagent .
+docker run -it --rm -v $(pwd):/data cellagent
+# Inside the container:
+# cd /cellagent
+# opencode --agent scai-orchestrator
+```
+
+### Option C: Singularity (HPC clusters)
+
+```bash
+singularity build cellagent.sif Singularity.def
+singularity run cellagent.sif
+```
 
 ### Quick start
 
 ```bash
+conda activate cellagent
 opencode --agent scai-orchestrator --project /path/to/your/data
 # Then say: "I have a PBMC h5ad, I want QC and clustering"
 ```

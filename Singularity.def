@@ -1,0 +1,10 @@
+Bootstrap: docker
+From: ghcr.io/sergiolitwiniuk85/cellagent:latest
+
+%post
+    # Singularity-specific setup if needed
+    echo "CellAgent — Single Cell AI Framework"
+    echo "Run: opencode --agent scai-orchestrator"
+
+%environment
+    export PATH=/cellagent:$PATH
