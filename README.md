@@ -79,8 +79,8 @@ This builds a **memory of decisions** — the framework gets smarter the more yo
 ## Project Structure
 
 ```
-scai/
-├── opencode.jsonc                # Agent configuration
+CellAgent/
+├── opencode.jsonc                # Agent configuration (OpenCode v3+)
 ├── agents/
 │   └── scai-orchestrator/
 │       └── INSTRUCTIONS.md       # Orchestrator persona
