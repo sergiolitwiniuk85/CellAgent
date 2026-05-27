@@ -10,28 +10,32 @@ Choose your method:
 git clone https://github.com/sergiolitwiniuk85/CellAgent.git
 cd CellAgent
 
-conda create -n cellagent -c conda-forge \
-  python=3.12 \
-  scanpy=1.12 \
-  muon=0.1.7 \
-  squidpy=1.8.1 \
-  spatialdata=0.7.3 \
-  spatialdata-plot=0.4.0 \
-  mudata=0.3.8 \
-  leidenalg=0.12.0
-
+conda env create -f environment.yml
 conda activate cellagent
+
 opencode --agent scai-orchestrator
 ```
 
+This creates a `cellagent` environment with pinned, tested versions of scanpy 1.12.1, muon 0.1.7, squidpy 1.8.1, spatialdata 0.7.3, and more.
+
 ### Option B: Docker (fully isolated)
+
+Pull the pre-built image (no build needed):
+
+```bash
+docker pull ghcr.io/sergiolitwiniuk85/cellagent:latest
+docker run -it --rm \
+  -v $(pwd):/data \
+  -v /path/to/CellAgent:/cellagent \
+  ghcr.io/sergiolitwiniuk85/cellagent:latest
+# Inside the container:
+# cd /cellagent && opencode --agent scai-orchestrator --project /data
+```
+
+Or build locally:
 
 ```bash
 docker build -t cellagent .
-docker run -it --rm -v $(pwd):/data cellagent
-# Inside the container:
-# cd /cellagent
-# opencode --agent scai-orchestrator
 ```
 
 ### Option C: Singularity (HPC clusters)
