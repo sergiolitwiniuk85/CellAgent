@@ -7,56 +7,56 @@ metadata:
   version: "1.0"
 ---
 
-# Report Agent — Generación de Reporte
+# Report Agent — Report Generation
 
-## Propósito
+## Purpose
 
-Sintetizar todo el análisis single-cell en un reporte ejecutivo que el científico pueda leer, compartir y usar en publicaciones.
+Synthesize the entire single-cell analysis into an executive report that the scientist can read, share, and use in publications.
 
-## Formato de Salida
+## Output Format
 
-El reporte se genera como:
+The report is generated as:
 
-1. **Markdown** → informe legible, con plots embedidos (base64 o paths)
-2. **HTML** (opcional) → más lindo, con tabs interactivos
-3. **Resumen en chat** → el orquestador lo muestra al usuario
+1. **Markdown** → readable report with embedded plots (base64 or paths)
+2. **HTML** (optional) → prettier, with interactive tabs
+3. **Chat summary** → the orchestrator shows it to the user
 
-## Estructura del Reporte
+## Report Structure
 
 ```markdown
-# Reporte de Análisis Single-Cell
-## Proyecto: {nombre}
-## Fecha: {fecha}
+# Single-Cell Analysis Report
+## Project: {name}
+## Date: {date}
 
-### 1. Resumen Ejecutivo
-- {n_células} células analizadas
-- {n_genes} genes detectados
-- {n_clusters} clusters identificados
-- {modadalidades} (si aplica)
+### 1. Executive Summary
+- {n_cells} cells analyzed
+- {n_genes} genes detected
+- {n_clusters} clusters identified
+- {modalities} (if applicable)
 
-### 2. Control de Calidad
-- Células antes del filtro: {n}
-- Células después del filtro: {n} ({pct}% retenidas)
-- Dobletes detectados: {n}
+### 2. Quality Control
+- Cells before filtering: {n}
+- Cells after filtering: {n} ({pct}% retained)
+- Doublets detected: {n}
 - ![QC Violins](qc_violin_post.png)
 
-### 3. Normalización
-- Método: scanpy (normalize_total + log1p)
-- HVG seleccionados: {n} de {n} totales
+### 3. Normalization
+- Method: scanpy (normalize_total + log1p)
+- HVGs selected: {n} of {n} total
 - ![HVG Plot](hvg_plot.png)
 
-### 4. Reducción de Dimensionalidad
-- PCA: {n} componentes
+### 4. Dimensionality Reduction
+- PCA: {n} components
 - ![PCA Variance](pca_variance.png)
 
 ### 5. Clustering
-- Algoritmo: Leiden, resolución {res}
-- Clusters encontrados: {n}
+- Algorithm: Leiden, resolution {res}
+- Clusters found: {n}
 - ![UMAP Clusters](umap_clusters.png)
 
 ### 6. Marker Genes
-- Método: {method}
-- Top genes por cluster:
+- Method: {method}
+- Top genes per cluster:
   | Cluster | Gene 1 | Gene 2 | Gene 3 |
   |---------|--------|--------|--------|
   | 0       | CD3D   | IL7R   | CCR7   |
@@ -64,37 +64,37 @@ El reporte se genera como:
   | ...     | ...    | ...    | ...    |
 - ![Marker Heatmap](marker_heatmap.png)
 
-### 7. Interpretación Preliminar
-- Cluster 0: parece ser {cell_type} (expresa {markers})
-- Cluster 1: parece ser {cell_type}
-- {recomendaciones para el próximo paso}
+### 7. Preliminary Interpretation
+- Cluster 0: appears to be {cell_type} (expresses {markers})
+- Cluster 1: appears to be {cell_type}
+- {recommendations for next steps}
 
-### 8. Parámetros Usados
-| Etapa | Parámetro | Valor |
+### 8. Parameters Used
+| Stage | Parameter | Value |
 |-------|-----------|-------|
 | QC | min_genes | 200 |
 | QC | max_pct_mito | 20 |
-| Normalización | n_top_genes | 2000 |
+| Normalization | n_top_genes | 2000 |
 | Clustering | resolution | 0.8 |
 | ... | ... | ... |
 ```
 
-## Cómo Construir el Reporte
+## How to Build the Report
 
-El report-agent recibe el `PipelineState` completo del orquestador con toda la historia y resultados. Simplemente:
+The report-agent receives the full `PipelineState` from the orchestrator with all history and results. Simply:
 
-1. Iterar `state["history"]` para cada etapa completada
-2. Extraer métricas, parámetros y paths de plots
-3. Generar el markdown
-4. Si hay marker genes, convertir a tabla
-5. Incluir interpretación básica de tipos celulares si es posible
+1. Iterate `state["history"]` for each completed stage
+2. Extract metrics, parameters, and plot paths
+3. Generate the markdown
+4. If marker genes exist, convert to table
+5. Include basic cell type interpretation if possible
 
-## Interpretación de Tipos Celulares (Básica)
+## Cell Type Interpretation (Basic)
 
-Usar una lookup table de marcadores clásicos (la más común):
+Use a lookup table of classic markers (the most common):
 
 ```python
-# Marcadores clásicos para PBMC humanos
+# Classic markers for human PBMC
 cell_type_markers = {
     "T cell": ["CD3D", "CD3E", "CD7"],
     "CD4+ T cell": ["CD3D", "CD4", "IL7R"],
@@ -110,7 +110,7 @@ cell_type_markers = {
 }
 ```
 
-Para cada cluster: intersectar top markers con esta tabla y sugerir tipo celular.
+For each cluster: intersect top markers with this table and suggest cell type.
 
 ## Output
 
@@ -119,7 +119,7 @@ Para cada cluster: intersectar top markers con esta tabla y sugerir tipo celular
     "stage": "report",
     "status": "completed",
     "report_path": "/path/to/report.md",
-    "summary": "Reporte generado con {n_clusters} clusters, {n_plots} plots",
+    "summary": "Report generated with {n_clusters} clusters, {n_plots} plots",
     "cell_type_annotations": {
         "0": "CD4+ T cell (CD3D+, CD4+)",
         "1": "Monocyte (CD14+, LYZ+)",
@@ -127,8 +127,8 @@ Para cada cluster: intersectar top markers con esta tabla y sugerir tipo celular
     },
     "plots_in_report": n_plots,
     "recommendations": [
-        "Revisar anotación de cluster 3 — no coincide claramente con marcadores conocidos",
-        "Considerar análisis diferencial entre condiciones si hay metadata de grupos",
+        "Review cluster 3 annotation — doesn't clearly match known markers",
+        "Consider differential analysis between conditions if group metadata is available",
     ]
 }
 ```

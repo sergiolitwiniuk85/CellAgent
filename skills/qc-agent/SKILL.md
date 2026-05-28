@@ -7,24 +7,24 @@ metadata:
   version: "1.0"
 ---
 
-# QC Agent — Control de Calidad
+# QC Agent — Quality Control
 
-## Propósito
+## Purpose
 
-Ejecutar control de calidad completo sobre datos single-cell: calcular métricas, detectar outliers, filtrar células y genes de baja calidad, detectar doublets.
+Run complete quality control on single-cell data: compute metrics, detect outliers, filter low-quality cells and genes, detect doublets.
 
-## Pipeline de QC
+## QC Pipeline
 
-### 1. Métricas Básicas (si no existen)
+### 1. Basic Metrics (if not already present)
 
 ```python
 sc.pp.calculate_qc_metrics(adata, percent_top=None, log1p=False, inplace=True)
 ```
 
-Esto agrega a `adata.obs`:
-- `n_genes_by_counts` — genes detectados por célula
-- `total_counts` — total de UMI/reads por célula
-- `pct_counts_mito` — si hay genes mitocondriales (empiezan con `MT-`)
+This adds to `adata.obs`:
+- `n_genes_by_counts` — genes detected per cell
+- `total_counts` — total UMI/reads per cell
+- `pct_counts_mito` — if mitochondrial genes exist (starting with `MT-`)
 
 ### 2. QC Violin Plots
 
@@ -33,42 +33,42 @@ sc.pl.violin(adata, ["n_genes_by_counts", "total_counts", "pct_counts_mito"],
              jitter=0.4, multi_panel=True)
 ```
 
-### 3. Filtro de Células
+### 3. Cell Filtering
 
-Parámetros por defecto (ajustables por el usuario):
+Default parameters (adjustable by the user):
 
 ```python
-# Mínimo de genes por célula (elimina empty droplets)
+# Minimum genes per cell (removes empty droplets)
 sc.pp.filter_cells(adata, min_genes=200)
 
-# Máximo de genes por célula (elimina posibles doublets)
+# Maximum genes per cell (removes potential doublets)
 sc.pp.filter_cells(adata, max_genes=6000)
 
-# Máximo de porcentaje mitocondrial
+# Maximum mitochondrial percentage
 adata = adata[adata.obs["pct_counts_mito"] < 20, :].copy()
 
-# O mínimo si el usuario quiere más strictos
+# Or stricter if the user prefers
 # adata = adata[adata.obs["pct_counts_mito"] < 5, :].copy()
 ```
 
-### 4. Filtro de Genes
+### 4. Gene Filtering
 
 ```python
-# Eliminar genes expresados en muy pocas células
+# Remove genes expressed in very few cells
 sc.pp.filter_genes(adata, min_cells=3)
 ```
 
-### 5. Detección de Doublets (opcional)
+### 5. Doublet Detection (optional)
 
 ```python
-# Opción 1: scrublet (rápido, viene con scanpy)
+# Option 1: scrublet (fast, ships with scanpy)
 sc.pp.scrublet(adata, batch_key="batch" if "batch" in adata.obs else None)
 
-# Opción 2: cellbender (más preciso, requiere instalación externa)
-# Indicar al usuario que es necesario si datos son de droplet-based (10x)
+# Option 2: cellbender (more accurate, requires external install)
+# Flag to user that this is needed if data is droplet-based (10x)
 ```
 
-### 6. Plots de Diagnóstico Post-Filtro
+### 6. Post-Filter Diagnostic Plots
 
 ```python
 # Violins post-filtro
@@ -80,14 +80,14 @@ sc.tl.pca(adata, n_comps=50, svd_solver="arpack")
 sc.pl.pca(adata, color=["doublet_score"] if "doublet_score" in adata.obs else None)
 ```
 
-## Interpretación para el Usuario
+## Interpretation for the User
 
-Explicar en lenguaje simple:
+Explain in plain language:
 
-- **Células con pocos genes**: probablemente células muertas o empty droplets
-- **Células con muchos genes**: posibles doublets (dos células en una)
-- **Alto porcentaje mitocondrial**: células estresadas o dañadas (el mRNA se pierde pero el mitocondrial queda)
-- **Genes con pocas células**: ruido técnico, no aportan información
+- **Low gene count cells**: likely dead cells or empty droplets
+- **High gene count cells**: potential doublets (two cells in one)
+- **High mitochondrial percentage**: stressed or damaged cells (mRNA is lost but mitochondrial remains)
+- **Genes in few cells**: technical noise, not informative
 
 ## Output
 

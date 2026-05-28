@@ -7,24 +7,24 @@ metadata:
   version: "1.0"
 ---
 
-# Cluster Agent — Reducción, Clustering y Marker Genes
+# Cluster Agent — Dimensionality Reduction, Clustering, and Marker Genes
 
-## Propósito
+## Purpose
 
-Ejecutar el pipeline completo de reducción de dimensionalidad, clustering y detección de marker genes sobre datos single-cell normalizados.
+Run the full dimensionality reduction, clustering, and marker gene detection pipeline on normalized single-cell data.
 
 ## Pipeline
 
 ### 1. PCA
 
 ```python
-# Siempre correr PCA
+# Always run PCA
 sc.tl.pca(adata, n_comps=50, svd_solver="arpack")
 
-# Mostrar varianza explicada (ayuda a decidir n_comps)
+# Show explained variance (helps decide n_comps)
 sc.pl.pca_variance_ratio(adata, n_pcs=50, log=True)
 
-# Scatter de primeras componentes
+# Scatter of first components
 sc.pl.pca(adata, color=["n_genes_by_counts", "total_counts", "pct_counts_mito"])
 ```
 
@@ -33,8 +33,8 @@ sc.pl.pca(adata, color=["n_genes_by_counts", "total_counts", "pct_counts_mito"])
 ```python
 sc.pp.neighbors(
     adata,
-    n_neighbors=15,           # estándar
-    n_pcs=30,                 # usar 30 PCs (ajustable)
+    n_neighbors=15,           # standard
+    n_pcs=30,                 # use 30 PCs (adjustable)
     use_rep="X_pca",
 )
 ```
@@ -50,18 +50,18 @@ sc.tl.umap(adata, min_dist=0.3, spread=1.0, random_state=42)
 ```python
 sc.tl.leiden(
     adata,
-    resolution=0.8,           # resolución por defecto
+    resolution=0.8,           # default resolution
     key_added="leiden",
     random_state=42,
 )
 ```
 
-**Estrategia de resolución**:
-- 0.1-0.3 → clusters grandes (pocos, biológicos amplios)
-- 0.5-1.0 → resolución estándar (recomendado arrancar con 0.8)
-- 1.0-2.0 → clusters finos (muchos, para subpoblaciones)
+**Resolution strategy**:
+- 0.1-0.3 → coarse clusters (few, broad biological)
+- 0.5-1.0 → standard resolution (recommended start at 0.8)
+- 1.0-2.0 → fine clusters (many, for subpopulations)
 
-Mostrar UMAP coloreado por clusters y por métricas de QC:
+Show UMAP colored by clusters and QC metrics:
 
 ```python
 sc.pl.umap(adata, color=["leiden", "n_genes_by_counts", "total_counts", "pct_counts_mito"],
@@ -71,7 +71,7 @@ sc.pl.umap(adata, color=["leiden", "n_genes_by_counts", "total_counts", "pct_cou
 ### 5. Marker Genes
 
 ```python
-# Wilcoxon rank-sum test (rápido, default)
+# Wilcoxon rank-sum test (fast, default)
 sc.tl.rank_genes_groups(
     adata,
     groupby="leiden",
@@ -81,44 +81,44 @@ sc.tl.rank_genes_groups(
 )
 ```
 
-Métodos disponibles:
-- `wilcoxon` → rápido, default, recomendado (rank-sum test)
-- `t-test` → más simple, asume normalidad
-- `logreg` → logistic regression, más lento pero robusto
+Available methods:
+- `wilcoxon` → fast, default, recommended (rank-sum test)
+- `t-test` → simpler, assumes normality
+- `logreg` → logistic regression, slower but robust
 
-Mostrar:
+Show:
 
 ```python
 sc.pl.rank_genes_groups(adata, n_genes=20, sharey=False, key="rank_genes_groups")
 
-# Dotplot de top markers por cluster
+# Dotplot of top markers per cluster
 sc.pl.dotplot(adata, var_names=sc.get.rank_genes_groups_df(adata, group=None)
               .groupby("group").head(3)["names"].tolist(),
               groupby="leiden")
 ```
 
-### 6. Opcional: Anotación Automática
+### 6. Optional: Automatic Annotation
 
-Si el usuario quiere anotar tipos celulares:
+If the user wants to annotate cell types:
 
 ```python
-# Buscar marcadores conocidos en los top genes de cada cluster
-# Sugerir al usuario revisar estos genes contra literatura conocida
+# Look up known markers in the top genes of each cluster
+# Suggest the user review these genes against known literature
 
-# Si hay CellTypist instalado, ofrecer anotación automática:
+# If CellTypist is installed, offer automatic annotation:
 # import celltypist
 # model = celltypist.models.Model.load(model="Immune_All_Low.pkl")
 # predictions = celltypist.annotate(adata, model=model, majority_voting=True)
 ```
 
-## Validación
+## Validation
 
 ```python
-print(f"Clusters encontrados: {adata.obs['leiden'].nunique()}")
-print(f"Resolución usada: {resolution}")
+print(f"Clusters found: {adata.obs['leiden'].nunique()}")
+print(f"Resolution used: {resolution}")
 sc.pl.umap(adata, color="leiden", legend_loc="on data")
 
-# Mostrar top 5 genes por cluster
+# Show top 5 genes per cluster
 top5 = sc.get.rank_genes_groups_df(adata, group=None).groupby("group").head(5)
 print(top5[["group", "names", "scores", "pvals_adj"]].to_string())
 ```
@@ -129,7 +129,7 @@ print(top5[["group", "names", "scores", "pvals_adj"]].to_string())
 {
     "stage": "cluster",
     "status": "completed",
-    "summary": f"Clustering completado: {n_clusters} clusters (leiden, res={resolution})",
+    "summary": f"Clustering complete: {n_clusters} clusters (leiden, res={resolution})",
     "params": {
         "n_pcs": 30,
         "n_neighbors": 15,
@@ -149,9 +149,9 @@ print(top5[["group", "names", "scores", "pvals_adj"]].to_string())
         "dotplot_markers.png",
     ],
     "recommendations": [
-        f"{n_clusters} clusters identificados",
-        "Se detectaron marker genes significativos (p_adj < 0.05)",
-        "¿Querés guardar los resultados o seguir a interpretación?",
+        f"{n_clusters} clusters identified",
+        "Significant marker genes detected (p_adj < 0.05)",
+        "Would you like to save results or proceed to interpretation?",
     ]
 }
 ```

@@ -7,13 +7,13 @@ metadata:
   version: "1.0"
 ---
 
-# Spatial Agent — Análisis Espacial
+# Spatial Agent — Spatial Analysis
 
-## Propósito
+## Purpose
 
-Analizar datos espaciales (Xenium, Visium, MERFISH) usando SpatialData para estructura y Squidpy para análisis.
+Analyze spatial data (Xenium, Visium, MERFISH) using SpatialData for structure and Squidpy for analysis.
 
-## Formato de Entrada
+## Input Format
 
 ```python
 import spatialdata as sd
@@ -26,19 +26,19 @@ sdata = sd.read_zarr("path/to/data.zarr")
 adata = sc.read_h5ad("path/to/spatial_data.h5ad")
 ```
 
-## Elementos de SpatialData
+## SpatialData Elements
 
-| Elemento | Acceso | Descripción |
+| Element | Access | Description |
 |----------|--------|-------------|
 | Images | `sdata["image_name"]` | H&E, DAPI, staining |
-| Labels | `sdata["label_name"]` | Segmentación pixel-level |
-| Points | `sdata["transcripts"]` | Coordenadas de transcripts |
-| Shapes | `sdata["boundaries"]` | Polígonos de células/núcleos |
-| Tables | `sdata["table"]` | AnnData con expresión génica |
+| Labels | `sdata["label_name"]` | Pixel-level segmentation |
+| Points | `sdata["transcripts"]` | Transcript coordinates |
+| Shapes | `sdata["boundaries"]` | Cell/nuclei polygons |
+| Tables | `sdata["table"]` | AnnData with gene expression |
 
-## Pipeline de Análisis Espacial
+## Spatial Analysis Pipeline
 
-### 1. Exploración del Dataset
+### 1. Dataset Exploration
 
 ```python
 print(sdata)

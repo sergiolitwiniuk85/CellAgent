@@ -7,177 +7,176 @@ metadata:
   version: "1.0"
 ---
 
-# Trace Agent — Documento de Trazabilidad
+# Trace Agent — Traceability Document
 
-## Propósito
+## Purpose
 
-Generar un documento de trazabilidad completo que registre **cada paso, comando, parámetro y resultado** del análisis single-cell. Esto garantiza reproducibilidad, auditoría y respaldo para publicaciones.
+Generate a comprehensive traceability document that records **every step, command, parameter, and result** of the single-cell analysis. This guarantees reproducibility, auditability, and publication support.
 
-Este documento es el **registro forense** del análisis — no un resumen ejecutivo (eso lo hace report-agent), sino la bitácora completa.
+This document is the **forensic record** of the analysis — not an executive summary (that's what report-agent does), but the complete logbook.
 
-## Cuándo se Ejecuta
+## When to Run
 
-**Siempre al final del pipeline**, después de report-agent. El orquestador debe invocarlo como etapa final obligatoria.
+**Always at the end of the pipeline**, after report-agent. The orchestrator MUST invoke it as a mandatory final stage.
 
-## Formato de Salida
+## Output Format
 
 ```
 output/{session_id}/traceability_{project}_{YYYY-MM-DD}.md
 ```
 
-## Estructura del Documento
+## Document Structure
 
 ```markdown
-# Trazabilidad de Análisis Single-Cell
+# Single-Cell Analysis Traceability
 
-## Metadatos del Análisis
+## Analysis Metadata
 
-| Campo | Valor |
+| Field | Value |
 |-------|-------|
-| Proyecto | {project_name} |
-| Fecha | {YYYY-MM-DD HH:mm} |
-| Archivo original | {data_path} |
-| Formato | {format} |
-| Sesión SCAI | {session_id} |
-| Usuario | {user} |
+| Project | {project_name} |
+| Date | {YYYY-MM-DD HH:mm} |
+| Original file | {data_path} |
+| Format | {format} |
+| SCAI session | {session_id} |
+| User | {user} |
 
-## Resumen del Dataset
+## Dataset Summary
 
-- {n_obs} células × {n_vars} genes
-- Modadalidad: {modality}
+- {n_obs} cells × {n_vars} genes
+- Modality: {modality}
 - Layers: {layers}
-- Columnas en obs: {obs_columns}
+- Obs columns: {obs_columns}
 
-## Pipeline Ejecutado
+## Pipeline Executed
 
-Las etapas se listan en orden cronológico, tal como fueron ejecutadas.
+Stages are listed in chronological order, exactly as they were executed.
 
 ---
 
-### Etapa 1: Carga de Datos
+### Stage 1: Data Loading
 
-**Agente**: data-agent
+**Agent**: data-agent
 **Timestamp**: {timestamp}
-**Comandos ejecutados**:
+**Commands executed**:
 
 \`\`\`python
 import scanpy as sc
 adata = sc.read_h5ad("path/to/data.h5ad")
 \`\`\`
 
-**Parámetros**:
-- Ninguno (solo lectura)
+**Parameters**:
+- None (read-only)
 
-**Resultados**:
-- Dataset cargado: {n_obs} × {n_vars}
-- Archivo guardado en: {current_data_path}
+**Results**:
+- Dataset loaded: {n_obs} × {n_vars}
+- File saved to: {current_data_path}
 
-**Decisiones**:
-- Formato detectado automáticamente
-- No se modificó el archivo original
+**Decisions**:
+- Format detected automatically
+- Original file was not modified
 
 ---
 
-### Etapa N: {stage_name}
+### Stage N: {stage_name}
 
-**Agente**: {agent_name}
+**Agent**: {agent_name}
 **Timestamp**: {timestamp}
 
-**Comandos ejecutados**:
+**Commands executed**:
 
 \`\`\`python
-# Comando real ejecutado
+# Actual command executed
 scanpy.pp.filter_cells(adata, min_genes=200)
 scanpy.pp.filter_cells(adata, max_genes=6000)
 \`\`\`
 
-**Parámetros**:
-| Parámetro | Valor | Justificación |
+**Parameters**:
+| Parameter | Value | Justification |
 |-----------|-------|---------------|
-| min_genes | 200 | Filtro estándar para eliminar debris |
-| max_genes | 6000 | Eliminar posibles dobletes |
+| min_genes | 200 | Standard filter to remove debris |
+| max_genes | 6000 | Remove potential doublets |
 
-**Resultados**:
-- Células antes: 10000
-- Células después: 8500 (85% retenidas)
-- Plots generados:
+**Results**:
+- Cells before: 10000
+- Cells after: 8500 (85% retained)
+- Plots generated:
   - `output/{session_id}/plots/qc_violin_pre.png`
   - `output/{session_id}/plots/qc_violin_post.png`
 
-**Decisiones**:
-- Se usó min_genes=200 porque el dataset es PBMC y ese valor es estándar
-- Se rechazó filter_genes porque no era necesario
+**Decisions**:
+- Used min_genes=200 because PBMC dataset, standard value
+- filter_genes was skipped as it wasn't needed
 
 ---
 
-### Tabla Completa de Parámetros
+### Complete Parameter Table
 
-| Etapa | Parámetro | Valor | Rango recomendado |
+| Stage | Parameter | Value | Recommended range |
 |-------|-----------|-------|-------------------|
 | QC | min_genes | 200 | 100-500 |
 | QC | max_genes | 6000 | 5000-10000 |
 | QC | max_pct_mito | 20 | 5-25 |
-| Normalización | método | normalize_total + log1p | — |
-| Normalización | target_sum | None | None o 1e4 |
-| Normalización | n_top_genes (HVG) | 2000 | 1000-5000 |
+| Normalization | method | normalize_total + log1p | — |
+| Normalization | target_sum | None | None or 1e4 |
+| Normalization | n_top_genes (HVG) | 2000 | 1000-5000 |
 | Clustering | n_pcs | 30 | 15-50 |
-| Clustering | resolución Leiden | 0.8 | 0.1-2.0 |
+| Clustering | Leiden resolution | 0.8 | 0.1-2.0 |
 | ... | ... | ... | ... |
 
-### Versiones de Librerías
+### Library Versions
 
-| Librería | Versión |
-|----------|---------|
+| Library | Version |
+|---------|---------|
 | scanpy | 1.12.1 |
 | muon | 0.1.7 |
 | squidpy | 1.8.1 |
 | anndata | {version} |
 | python | 3.12 |
 
-### Archivos Generados
+### Generated Files
 
-| Archivo | Path |
-|---------|------|
-| Datos procesados | output/{session_id}/data_processed.h5ad |
-| Reporte ejecutivo | output/{session_id}/report.md |
+| File | Path |
+|------|------|
+| Processed data | output/{session_id}/data_processed.h5ad |
+| Executive report | output/{session_id}/report.md |
 | PCA variance plot | output/{session_id}/plots/pca_variance.png |
 | UMAP clusters | output/{session_id}/plots/umap_clusters.png |
 | ... | ... |
 
-### Notas del Analista
+### Analyst Notes
 
-{space para que el orquestador/científico agregue interpretaciones o comentarios}
+{space for the orchestrator/scientist to add interpretations or comments}
 
 ---
 
-*Documento generado automáticamente por SCAI Trace Agent*
+*Document automatically generated by SCAI Trace Agent*
 *Framework: CellAgent (https://github.com/sergiolitwiniuk85/CellAgent)*
 ```
 
-## Cómo Construir el Documento
+## How to Build the Document
 
-El trace-agent recibe el `PipelineState` completo del orquestador con todo el historial.
+The trace-agent receives the full `PipelineState` from the orchestrator with all history.
 
-Pasos:
+Steps:
 
-1. **Leer el estado**: Recibir `PipelineState` del orquestador
-2. **Iterar `history[]`**: Para cada etapa, extraer:
-   - Nombre del agente
+1. **Read the state**: Receive `PipelineState` from the orchestrator
+2. **Iterate `history[]`**: For each stage, extract:
+   - Agent name
    - Timestamp
-   - Comandos ejecutados (si están registrados)
-   - Parámetros usados
-   - Resultados (métricas numéricas, paths de plots)
-   - Decisiones tomadas
-3. **Recopilar metadatos**: Versiones de librerías (usar `pip list` o `scanpy.__version__`)
-4. **Generar markdown**: Usar la estructura exacta de arriba
-5. **Guardar archivo**: En `output/{session_id}/traceability_{project}_{date}.md`
+   - Commands executed (if recorded)
+   - Parameters used
+   - Results (numeric metrics, plot paths)
+   - Decisions made
+3. **Collect metadata**: Library versions (use `pip list` or `scanpy.__version__`)
+4. **Generate markdown**: Use the exact structure above
+5. **Save file**: To `output/{session_id}/traceability_{project}_{date}.md`
 
-## Recolección de Información
+## Information Collection
 
-El trace-agent debe ejecutar estos comandos para obtener metadatos del entorno:
+The trace-agent should run these commands to gather environment metadata:
 
 ```python
-import subprocess
 import scanpy as sc
 import muon as mu
 import squidpy as sq
@@ -185,7 +184,6 @@ import anndata as ad
 import pandas as pd
 import numpy as np
 import matplotlib
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 libraries = {
@@ -208,15 +206,15 @@ libraries = {
     "status": "completed",
     "trace_path": "output/{session_id}/traceability_{project}_{date}.md",
     "n_stages": len(history),
-    "summary": f"Documento de trazabilidad generado con {len(history)} etapas"
+    "summary": f"Traceability document generated with {len(history)} stages"
 }
 ```
 
 ## Hard Rules
 
-- **No inventar comandos**. Si el agente no registró qué comandos ejecutó, poner "Comandos: no registrados"
-- **No inventar justificaciones**. Si no se registró por qué se eligió un parámetro, poner "No documentado"
-- **No modificar los datos**. El trace-agent es read-only
-- **Incluir SIEMPRE** la tabla de parámetros completa y las versiones de librerías
-- Si el pipeline tiene menos de 2 etapas, documentar como "análisis parcial"
-- El documento debe ser **autocontenido**: cualquiera que lo lea debe poder reproducir el análisis
+- **Do not fabricate commands**. If the agent didn't record which commands were run, write "Commands: not recorded"
+- **Do not fabricate justifications**. If no reason was recorded for a parameter choice, write "Not documented"
+- **Do not modify data**. The trace-agent is read-only
+- **ALWAYS include** the complete parameter table and library versions
+- If the pipeline has fewer than 2 stages, document as "partial analysis"
+- The document must be **self-contained**: anyone who reads it must be able to reproduce the analysis

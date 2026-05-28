@@ -7,13 +7,13 @@ metadata:
   version: "1.0"
 ---
 
-# Data Agent — Carga y Descripción de Datos
+# Data Agent — Data Loading and Description
 
-## Propósito
+## Purpose
 
-Cargar datos single-cell desde archivos y generar una descripción completa del dataset: dimensiones, capas, metadata, calidad básica.
+Load single-cell data from files and generate a complete dataset description: dimensions, layers, metadata, basic quality.
 
-## Formatos Soportados
+## Supported Formats
 
 | Formato | Librería | Objeto | Uso |
 |---------|----------|--------|-----|
@@ -39,19 +39,19 @@ mdata = md.read("path/to/data.h5mu")
 sdata = sd.read_zarr("path/to/data.zarr")
 ```
 
-## Descripción del Dataset
+## Dataset Description
 
-Siempre reportar:
+Always report:
 
-- **Dimensiones**: `n_obs × n_vars` (células × genes)
-- **Capas (layers)**: qué hay en `.layers` (counts, normalized, etc.)
-- **Columnas obs**: qué metadata de células está disponible
-- **Columnas var**: qué metadata de genes está disponible (si aplica)
-- **Embeddings**: qué reducciones existen (PCA, UMAP, etc.)
-- **Uns**: qué hay en `.uns` (genes markers, colores, etc.)
-- **Raw**: si tiene `.raw` guardado
-- **Para MuData**: qué modadalidades, dimensiones de cada una
-- **Para SpatialData**: qué elementos (Images, Labels, Points, Shapes, Tables)
+- **Dimensions**: `n_obs × n_vars` (cells × genes)
+- **Layers**: what's in `.layers` (counts, normalized, etc.)
+- **Obs columns**: available cell metadata
+- **Var columns**: available gene metadata (if applicable)
+- **Embeddings**: existing reductions (PCA, UMAP, etc.)
+- **Uns**: content of `.uns` (marker genes, colors, etc.)
+- **Raw**: whether `.raw` is saved
+- **For MuData**: modalities, dimensions of each
+- **For SpatialData**: elements (Images, Labels, Points, Shapes, Tables)
 
 ## Output
 

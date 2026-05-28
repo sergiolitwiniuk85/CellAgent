@@ -1,30 +1,30 @@
 # Pipeline State — SCAI Shared State Schema
 
-## Objeto de Estado
+## State Object
 
-El estado del pipeline se pasa entre agentes como un diccionario/JSON con esta estructura:
+Pipeline state is passed between agents as a dictionary/JSON with this structure:
 
 ```python
 PipelineState = {
-    # --- Identificación ---
-    "session_id": str,          # ID único de la sesión de análisis
-    "project_name": str,        # Nombre del proyecto (ej: "pbmc_10k")
+    # --- Identification ---
+    "session_id": str,          # Unique analysis session ID
+    "project_name": str,        # Project name (e.g. "pbmc_10k")
     
-    # --- Datos ---
-    "data_path": str,           # Path al archivo de datos original
+    # --- Data ---
+    "data_path": str,           # Path to original data file
     "format": str,              # "h5ad" | "h5mu" | "zarr" | "h5ad+images"
     "modality": str,            # "rna" | "atac" | "protein" | "multimodal" | "spatial"
     
-    # --- Objeto principal (serializado a path) ---
-    "current_data_path": str,   # Path al archivo .h5ad/.h5mu/.zarr actual
+    # --- Main object (serialized to path) ---
+    "current_data_path": str,   # Path to current .h5ad/.h5mu/.zarr file
     "current_data_type": str,   # "AnnData" | "MuData" | "SpatialData"
     
-    # --- Metadata del dataset ---
-    "n_obs": int,               # Número de células/observaciones
-    "n_vars": int,              # Número de genes/features
-    "layers": list[str],        # Layers disponibles (counts, normalized, etc.)
-    "obs_columns": list[str],   # Columnas en .obs
-    "var_columns": list[str],   # Columnas en .var
+    # --- Dataset metadata ---
+    "n_obs": int,               # Number of cells/observations
+    "n_vars": int,              # Number of genes/features
+    "layers": list[str],        # Available layers (counts, normalized, etc.)
+    "obs_columns": list[str],   # Columns in .obs
+    "var_columns": list[str],   # Columns in .var
     
     # --- Pipeline history ---
     "history": [
@@ -32,19 +32,19 @@ PipelineState = {
             "stage": str,        # "data" | "qc" | "normalize" | "cluster" | "integration" | "spatial"
             "timestamp": str,    # ISO datetime
             "status": str,       # "completed" | "skipped" | "failed"
-            "summary": str,      # Resumen de lo que se hizo
-            "params": dict,      # Parámetros usados
-            "output_path": str,  # Path al archivo generado (si aplica)
+            "summary": str,      # What was done in this stage
+            "params": dict,      # Parameters used
+            "output_path": str,  # Path to generated file (if applicable)
         }
     ],
     
-    # --- Resultados por etapa ---
+    # --- Per-stage results ---
     "qc_metrics": {
         "total_counts": float,
         "n_genes_by_counts": float,
         "pct_mito": float,
         "doublet_score": float | None,
-        "filter_thresholds": dict,  # thresholds usados para filtrar
+        "filter_thresholds": dict,  # Thresholds used for filtering
     },
     
     "normalization": {
@@ -58,32 +58,32 @@ PipelineState = {
         "n_pcs": int,
         "resolution": float,
         "n_clusters": int,
-        "cluster_key": str,         # nombre en adata.obs (ej: "leiden")
+        "cluster_key": str,         # Name in adata.obs (e.g. "leiden")
         "has_umap": bool,
         "has_markers": bool,
     },
     
     "integration": {
         "method": str | None,       # "WNN" | "MOFA+" | "concat" | None
-        "modalities": list[str],    # modadalidades integradas
+        "modalities": list[str],    # Integrated modalities
     },
     
     # --- Outputs ---
-    "plots": list[dict],            # paths a plots generados
-    "report_path": str | None,      # path al reporte final
+    "plots": list[dict],            # Paths to generated plots
+    "report_path": str | None,      # Path to final report
 }
 ```
 
-## Ciclo de Vida
+## Lifecycle
 
-1. **Inicio**: El orquestador crea el estado con `data_path` y lo que el usuario dijo
-2. **Cada etapa**: El agente lee el estado actual, hace su trabajo, actualiza el estado
-3. **Persistencia**: Después de cada etapa, el orquestador guarda el estado en engram
-4. **Continuación**: Si el usuario vuelve después, el orquestador recupera el estado y continúa
+1. **Start**: The orchestrator creates the state with `data_path` and what the user requested
+2. **Each stage**: The agent reads current state, performs its work, updates the state
+3. **Persistence**: After each stage, the orchestrator saves the state to engram
+4. **Resume**: If the user returns later, the orchestrator retrieves the state and continues
 
-## Reglas
+## Rules
 
-- Los agentes NUNCA modifican el estado directamente en engram. Devuelven el estado actualizado al orquestador.
-- El orquestador es el único que persiste.
-- Siempre incluir `current_data_path` — es el archivo que el próximo agente va a leer.
-- Los plots se guardan en `output/plots/{session_id}/` por defecto.
+- Agents NEVER modify state directly in engram. They return the updated state to the orchestrator.
+- The orchestrator is the sole persister.
+- Always include `current_data_path` — it's the file the next agent will read.
+- Plots are saved to `output/plots/{session_id}/` by default.
