@@ -21,8 +21,14 @@ You need **two things**: the scverse environment (scanpy, muon, etc.) and OpenCo
 ### Step 1: Install OpenCode (Linux & macOS)
 
 ```bash
-# Linux / macOS — install the CLI
-curl -fsSL https://opencode.ai/install.sh | sh
+# Option A — Install script (Linux & macOS)
+curl -fsSL https://raw.githubusercontent.com/opencode-ai/opencode/refs/heads/main/install | bash
+
+# Install a specific version
+curl -fsSL https://raw.githubusercontent.com/opencode-ai/opencode/refs/heads/main/install | VERSION=0.1.0 bash
+
+# Option B — Homebrew (macOS & Linux)
+brew install opencode-ai/tap/opencode
 
 # Verify
 opencode --version
