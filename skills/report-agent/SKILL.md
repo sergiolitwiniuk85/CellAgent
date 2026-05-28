@@ -18,8 +18,47 @@ Synthesize the entire single-cell analysis into an executive report that the sci
 The report is generated as:
 
 1. **Markdown** → readable report with embedded plots (base64 or paths)
-2. **HTML** (optional) → prettier, with interactive tabs
-3. **Chat summary** → the orchestrator shows it to the user
+2. **PDF** → publication-ready via Typst (lightweight, modern typesetting)
+3. **HTML** (optional) → prettier, with interactive tabs
+4. **Chat summary** → the orchestrator shows it to the user
+
+### PDF Generation (Typst)
+
+After writing the Markdown report, convert to PDF using the bundled script:
+
+```bash
+# Basic usage
+python skills/report-agent/scripts/md_to_pdf.py report.md -o report.pdf
+
+# With custom margins
+python skills/report-agent/scripts/md_to_pdf.py report.md -o report.pdf --margin 1.5in
+
+# Keep intermediate .typ file (debugging)
+python skills/report-agent/scripts/md_to_pdf.py report.md -o report.pdf --keep-typ
+```
+
+The pipeline is: **Markdown → Pandoc → Typst → PDF**
+
+- **Pandoc** converts MD → Typst format
+- **Typst** compiles to PDF (lightweight, ~15 MB binary vs ~500 MB for LaTeX)
+
+**Requirements**: `pandoc >= 3.1` (with typst writer) and `typst >= 0.12`.
+Both are included in the Docker image or can be installed via:
+
+```bash
+# Via conda
+conda install -c conda-forge pandoc
+# Typst binary (Linux x86_64)
+curl -sSfL https://github.com/typst/typst/releases/latest/download/typst-x86_64-unknown-linux-musl.tgz | tar xz
+sudo mv typst /usr/local/bin/
+```
+
+> **Why Typst over LaTeX?** Typst is ~30x smaller, compiles 5-10x faster, has cleaner syntax, and produces equally professional PDFs.
+
+### Script reference
+
+- `scripts/md_to_pdf.py` — Markdown → PDF converter (uses pandoc + typst)
+- `scripts/scai_template.typ` — Typst report template (for standalone use)
 
 ## Report Structure
 

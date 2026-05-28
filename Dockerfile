@@ -11,8 +11,10 @@ FROM python:3.12-slim
 LABEL org.opencontainers.image.source="https://github.com/sergiolitwiniuk85/CellAgent"
 LABEL org.opencontainers.image.description="CellAgent scverse environment - scanpy, muon, squidpy, spatialdata"
 
+# Install system deps + pandoc (for MD→PDF conversion via Typst)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential gcc gfortran libopenblas-dev liblapack-dev \
+    pandoc \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pinned scverse stack (same versions as environment.yml)
@@ -24,6 +26,9 @@ RUN pip install --no-cache-dir \
     spatialdata-plot==0.3.4 \
     mudata==0.3.8 \
     leidenalg==0.12.0
+
+# Install Typst for lightweight PDF generation
+RUN pip install --no-cache-dir "typst>=0.12"
 
 WORKDIR /data
 CMD ["/bin/bash"]

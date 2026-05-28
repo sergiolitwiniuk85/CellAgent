@@ -16,7 +16,10 @@ dependencies:
   - spatialdata-plot=0.3.4
   - mudata=0.3.8
   - leidenalg=0.12.0
+  - pandoc=3.1
   - pip
+  - pip:
+    - typst>=0.12
   # Optional: GPU-accelerated
   # - rapids-singlecell
   # HPC support
