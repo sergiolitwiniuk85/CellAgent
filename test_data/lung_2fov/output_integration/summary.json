@@ -1,0 +1,14 @@
+{
+  "crop": "1200\u00d71200 at (1200,2000)",
+  "cells_processed": 1219,
+  "n_image_features": 24,
+  "n_expression_genes": 20,
+  "hex_bins": 53,
+  "hex_diameter_um": 50.0,
+  "knn_k": 10,
+  "knn_edges": 12190,
+  "within_compartment_connectivity_pct": 96.6,
+  "multimodal_pca_pc1_pct": 92.3,
+  "multimodal_pca_pc2_pct": 5.5,
+  "total_time_s": 180.0
+}
