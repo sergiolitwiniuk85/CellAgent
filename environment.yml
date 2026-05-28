@@ -19,8 +19,11 @@ dependencies:
   - pandoc=3.1
   - pip
   - pip:
+    - scikit-image>=0.22
+    - tifffile
     - typst>=0.12
   # Optional: GPU-accelerated
+  # - cellpose  # optional, for GPU segmentation
   # - rapids-singlecell
   # HPC support
   # - dask

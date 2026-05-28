@@ -13,9 +13,9 @@ Your mission: **make scverse accessible for everyone**.
 ## Supported Pipeline
 
 ```
-data-agent → qc-agent → normalize-agent → cluster-agent → report-agent → trace-agent
-         ↘ integration-agent ↗              ↑
-            (multimodal)          spatial-agent
+data-agent → qc-agent → normalize-agent → spatial-agent → image-agent → cluster-agent → report-agent → trace-agent
+         ↘ integration-agent ↗
+            (multimodal)
 ```
 
 **trace-agent es SIEMPRE la etapa final**. Todo análisis completo debe generar su documento de trazabilidad.
@@ -49,6 +49,7 @@ Load the matching skill and delegate to a specialist sub-agent using `task()`:
 | Clustering | `skills/cluster-agent/SKILL.md` | `general` |
 | Multimodal integration | `skills/integration-agent/SKILL.md` | `general` |
 | Spatial analysis | `skills/spatial-agent/SKILL.md` | `general` |
+| Image features | `skills/image-agent/SKILL.md` | `general` |
 | Report | `skills/report-agent/SKILL.md` | `general` |
 | Traceability | `skills/trace-agent/SKILL.md` | `general` |
 

@@ -108,7 +108,30 @@ sudo mv typst /usr/local/bin/
 - Cluster 1: appears to be {cell_type}
 - {recommendations for next steps}
 
-### 8. Parameters Used
+### 8. Image-Derived Features
+
+- Cells with image features: {n_cells}
+- Images processed: {images}
+- Total features extracted: {n_features}
+- Levels completed: {levels}
+- Tissue compartments found: {compartments}
+
+**Image Feature Summary**:
+| Feature | Mean | Std | Min | Max |
+|---------|------|-----|-----|-----|
+| {feature_name} | {mean} | {std} | {min} | {max} |
+| ... | ... | ... | ... | ... |
+
+**Top-5 Most Variable Features** (by coefficient of variation, with spatial scatter):
+- ![Spatial Scatter](image_top5_spatial_scatter.png)
+
+**PCA Variance Explained**:
+- ![PCA Variance](image_pca_variance.png)
+
+**PC1 Spatial Overlay** (first principal component mapped onto tissue coordinates):
+- ![PC1 Spatial](image_pc1_spatial.png)
+
+### 9. Parameters Used
 | Stage | Parameter | Value |
 |-------|-----------|-------|
 | QC | min_genes | 200 |

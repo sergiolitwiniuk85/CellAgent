@@ -68,6 +68,15 @@ PipelineState = {
         "modalities": list[str],    # Integrated modalities
     },
     
+    "image_features": {
+        "n_features": int,
+        "n_images_processed": int,
+        "levels_completed": list[str],  # ["morphology", "microenvironment", "compartments"]
+        "feature_names": list[str],
+        "feature_columns": list[str],   # column names added to .obs
+        "plots": list[str],             # paths to generated plots
+    },
+    
     # --- Outputs ---
     "plots": list[dict],            # Paths to generated plots
     "report_path": str | None,      # Path to final report
