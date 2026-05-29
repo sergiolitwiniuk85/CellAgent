@@ -14,54 +14,81 @@ from typing import Dict, List, Optional
 # Each tissue context maps to the set of PanglaoDB organs that are
 # biologically relevant for that tissue. This prevents assigning
 # cell types from completely unrelated tissues (e.g. lung in breast).
+# ── Always-relevant tissues (immune, vascular) for ANY tissue context ──
+ALWAYS_RELEVANT = {"Immune system", "Blood", "Vasculature"}
+
+# ── Curated tissue contexts (multi-organ, for complex TMEs) ──
+# These override auto-detection for tissues where we want a broader
+# set of relevant organs than just the primary tissue.
 TISSUE_ORGANS = {
-    "breast": {
-        "Mammary gland",
-        "Immune system",
-        "Vasculature",
-        "Connective tissue",
-        "Smooth muscle",
-        "Blood",
-        "Epithelium",
+    "breast": ALWAYS_RELEVANT | {
+        "Mammary gland", "Connective tissue", "Smooth muscle", "Epithelium",
     },
-    "lung": {
-        "Lungs",
-        "Immune system",
-        "Vasculature",
-        "Connective tissue",
-        "Smooth muscle",
-        "Blood",
-        "Epithelium",
+    "lung": ALWAYS_RELEVANT | {
+        "Lungs", "Connective tissue", "Smooth muscle", "Epithelium",
     },
-    "brain": {
+    "brain": ALWAYS_RELEVANT | {
         "Brain",
-        "Immune system",
-        "Vasculature",
-        "Blood",
     },
-    "blood": {
-        "Blood",
-        "Immune system",
-    },
+    "blood": ALWAYS_RELEVANT,
     "all": None,  # no filter
 }
 
 
-def resolve_tissue_organs(tissue: str) -> Optional[set]:
+def _panglao_organs(df: pd.DataFrame) -> dict:
+    """Build {lowercase_organ: original_organ} from PanglaoDB."""
+    return {o.lower().strip(): o for o in df["organ"].dropna().unique()}
+
+
+def resolve_tissue_organs(tissue: str,
+                           df: Optional[pd.DataFrame] = None) -> Optional[set]:
     """Resolve a common tissue name to a set of PanglaoDB organ names.
 
-    Returns None for 'all' (no filter), or a set of organ strings.
-    Unknown tissues return None and print a warning.
+    Strategy:
+      1. 'all' → None (no filter).
+      2. Curated TISSUE_ORGANS entry → use it.
+      3. Auto-detect from PanglaoDB organ names (exact → partial match).
+      4. Fallback: ALWAYS_RELEVANT tissues (immune, blood, vasculature).
+
+    Args:
+        tissue: Tissue name, e.g. 'breast', 'pancreas', 'kidney'.
+        df: PanglaoDB DataFrame (required for auto-detection).
+
+    Returns:
+        Set of organ names, or None for 'all'.
     """
     key = tissue.strip().lower()
+
+    # 1. Special case: all
+    if key == "all":
+        return None
+
+    # 2. Curated mapping
     if key in TISSUE_ORGANS:
         return TISSUE_ORGANS[key]
-    # Try partial match (e.g. "mammary" → "breast")
-    for k, v in TISSUE_ORGANS.items():
-        if key in k or k in key:
-            return v
-    print(f"  ⚠ Unknown tissue '{tissue}'. Available: {list(TISSUE_ORGANS.keys())}")
-    return None
+
+    # 3. Auto-detect from PanglaoDB organ names
+    if df is not None:
+        organ_map = _panglao_organs(df)
+
+        # 3a. Exact match against PanglaoDB organs
+        if key in organ_map:
+            result = {organ_map[key]}
+            print(f"  Auto-detected organ '{organ_map[key]}' for tissue '{tissue}'")
+            return result | ALWAYS_RELEVANT
+
+        # 3b. Partial match (e.g. "nervous" matches nothing, but "nerve"...)
+        for o_lower, o_orig in organ_map.items():
+            if key in o_lower or o_lower in key:
+                result = {o_orig}
+                print(f"  Auto-detected organ '{o_orig}' for tissue '{tissue}' "
+                      f"(fuzzy match on '{o_lower}')")
+                return result | ALWAYS_RELEVANT
+
+    # 4. Fallback: always-relevant tissues
+    print(f"  ⚠ No PanglaoDB organ found for '{tissue}'. "
+          f"Falling back to default context: {ALWAYS_RELEVANT}")
+    return ALWAYS_RELEVANT
 
 
 def load_marker_db(
@@ -105,10 +132,10 @@ def load_marker_db(
     elif species == "mouse":
         df = df[df["species"].str.contains("Mm", na=False)]
 
-    # Determine organ filter
+    # Determine organ filter (pass df for auto-detection)
     target_organs = None
     if tissue_context is not None:
-        target_organs = resolve_tissue_organs(tissue_context)
+        target_organs = resolve_tissue_organs(tissue_context, df=df)
         if target_organs is not None:
             df = df[df["organ"].isin(target_organs)]
             print(f"  Tissue context '{tissue_context}': filtering to "
