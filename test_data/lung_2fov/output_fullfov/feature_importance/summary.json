@@ -1,0 +1,27 @@
+{
+  "dataset": "Lung Full FOV",
+  "accuracy_mean": 0.5184,
+  "accuracy_std": 0.0148,
+  "f1_mean": 0.5041,
+  "f1_std": 0.0148,
+  "baseline_accuracy": 0.0898,
+  "beats_baseline": true,
+  "n_classes": 20,
+  "n_samples": 11898,
+  "n_features": 47,
+  "top5_features": [
+    "compartment_boundary_distance",
+    "microenv_nndist_5",
+    "microenv_nndist_4",
+    "microenv_nndist_3",
+    "microenv_nndist_2"
+  ],
+  "modalidad_split": {
+    "image_gini_pct": 70.1344734194109,
+    "expression_gini_pct": 29.86552658058911,
+    "image_perm_pct": 99.99267774767517,
+    "expression_perm_pct": 0.007322252324818408,
+    "n_image_features": 24,
+    "n_expression_features": 23
+  }
+}
