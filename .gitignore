@@ -5,6 +5,10 @@ test_data_2/
 *.zarr
 *.zip
 *.tar.gz
+*.tif
+*.ome.tif
+data/
+revision_experimental_layer.txt
 __pycache__/
 *.pyc
 .env
