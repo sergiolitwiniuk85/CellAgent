@@ -10,11 +10,66 @@ from pathlib import Path
 from typing import Dict, List, Optional
 
 
+# ── Tissue-to-PanglaoDB-organ mapping ──────────────────────────
+# Each tissue context maps to the set of PanglaoDB organs that are
+# biologically relevant for that tissue. This prevents assigning
+# cell types from completely unrelated tissues (e.g. lung in breast).
+TISSUE_ORGANS = {
+    "breast": {
+        "Mammary gland",
+        "Immune system",
+        "Vasculature",
+        "Connective tissue",
+        "Smooth muscle",
+        "Blood",
+        "Epithelium",
+    },
+    "lung": {
+        "Lungs",
+        "Immune system",
+        "Vasculature",
+        "Connective tissue",
+        "Smooth muscle",
+        "Blood",
+        "Epithelium",
+    },
+    "brain": {
+        "Brain",
+        "Immune system",
+        "Vasculature",
+        "Blood",
+    },
+    "blood": {
+        "Blood",
+        "Immune system",
+    },
+    "all": None,  # no filter
+}
+
+
+def resolve_tissue_organs(tissue: str) -> Optional[set]:
+    """Resolve a common tissue name to a set of PanglaoDB organ names.
+
+    Returns None for 'all' (no filter), or a set of organ strings.
+    Unknown tissues return None and print a warning.
+    """
+    key = tissue.strip().lower()
+    if key in TISSUE_ORGANS:
+        return TISSUE_ORGANS[key]
+    # Try partial match (e.g. "mammary" → "breast")
+    for k, v in TISSUE_ORGANS.items():
+        if key in k or k in key:
+            return v
+    print(f"  ⚠ Unknown tissue '{tissue}'. Available: {list(TISSUE_ORGANS.keys())}")
+    return None
+
+
 def load_marker_db(
     db_path: str = "data/cell_markers/panglao_markers.tsv",
     species: str = "human",
     organ: Optional[str] = None,
     canonical_only: bool = False,
+    tissue_context: Optional[str] = None,
 ) -> Dict[str, List[str]]:
     """
     Load PanglaoDB markers into {cell_type: [genes]} dict.
@@ -27,10 +82,15 @@ def load_marker_db(
         "human" → only human markers (Hs), "mouse" → only mouse (Mm),
         "all" → both species.
     organ : str or None
-        Filter by organ (e.g., "Breast", "Immune system").
-        None → all organs.
+        Filter by a single organ (e.g., "Mammary gland", "Immune system").
+        None → all organs (unless tissue_context is set).
     canonical_only : bool
         If True, only include canonical markers (column 8 == 1).
+    tissue_context : str or None
+        Tissue context for smart organ filtering, e.g. "breast", "lung".
+        Maps to a set of relevant PanglaoDB organs via TISSUE_ORGANS.
+        Overrides the `organ` parameter when set.
+        Use "all" to explicitly disable tissue filtering.
     """
     path = Path(db_path)
     if not path.exists():
@@ -45,8 +105,16 @@ def load_marker_db(
     elif species == "mouse":
         df = df[df["species"].str.contains("Mm", na=False)]
 
-    # Filter by organ
-    if organ and organ.lower() != "all":
+    # Determine organ filter
+    target_organs = None
+    if tissue_context is not None:
+        target_organs = resolve_tissue_organs(tissue_context)
+        if target_organs is not None:
+            df = df[df["organ"].isin(target_organs)]
+            print(f"  Tissue context '{tissue_context}': filtering to "
+                  f"{len(target_organs)} organs ({', '.join(sorted(target_organs))})")
+            print(f"    → {len(df)} entries retained")
+    elif organ and organ.lower() != "all":
         df = df[df["organ"].str.lower() == organ.lower()]
 
     # Filter canonical only

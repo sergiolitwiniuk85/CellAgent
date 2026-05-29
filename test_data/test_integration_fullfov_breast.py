@@ -912,12 +912,12 @@ adata.obsm['X_pca'] = pca_mm_result
 
 # Compute neighbors on PCA
 sc.pp.neighbors(adata, n_neighbors=15, n_pcs=min(10, pca_mm_result.shape[1]))
-for res in [0.3, 0.5, 1.0]:
+for res in [0.2, 0.3, 0.5, 1.0]:
     sc.tl.leiden(adata, resolution=res, key_added=f'leiden_r{res}')
 
-adata.obs['leiden'] = adata.obs['leiden_r0.5']
+adata.obs['leiden'] = adata.obs['leiden_r0.3']
 n_clusters = adata.obs['leiden'].nunique()
-print(f"  Leiden clusters (r=0.5): {n_clusters}")
+print(f"  Leiden clusters (r=0.3): {n_clusters}")
 print(f"  Cluster sizes:\n{adata.obs['leiden'].value_counts().sort_index().to_string()}")
 
 ct = pd.crosstab(adata.obs['leiden'], adata.obs['compartment'],
@@ -926,9 +926,9 @@ print(f"\n  Cluster × Compartment (% per cluster):\n{ct.to_string()}")
 
 # Leiden PCA plot (colored by cluster)
 fig, axes = plt.subplots(1, 3, figsize=(18, 5))
-for idx, (res, label) in enumerate([('leiden_r0.3', 'r=0.3'),
-                                      ('leiden_r0.5', 'r=0.5'),
-                                      ('leiden_r1.0', 'r=1.0')]):
+for idx, (res, label) in enumerate([('leiden_r0.2', 'r=0.2'),
+                                      ('leiden_r0.3', 'r=0.3'),
+                                      ('leiden_r0.5', 'r=0.5')]):
     ax = axes[idx]
     for clust in sorted(adata.obs[res].unique()):
         mask = adata.obs[res] == clust
@@ -965,9 +965,11 @@ print("  leiden_spatial_map.png ✓")
 # Save cluster assignments
 cluster_df = pd.DataFrame({
     'cell_id': adata.obs['cell_id'].values,
+    'leiden': adata.obs['leiden'].values,
+    'compartment': adata.obs['compartment'].values,
+    'leiden_r0.2': adata.obs['leiden_r0.2'].values,
     'leiden_r0.3': adata.obs['leiden_r0.3'].values,
     'leiden_r0.5': adata.obs['leiden_r0.5'].values,
-    'leiden_r1.0': adata.obs['leiden_r1.0'].values,
 })
 cluster_df.to_csv(OUT / "tables" / "leiden_clusters.csv", index=False)
 print(f"  Saved: leiden_clusters.csv ({len(cluster_df)} cells)")
@@ -1006,7 +1008,7 @@ _annotate_mod = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_annotate_mod)
 
 marker_db = _annotate_mod.load_marker_db(
-    species="human", organ="all", canonical_only=True)
+    species="human", tissue_context="breast", canonical_only=True)
 annotations = _annotate_mod.annotate_clusters(
     cluster_genes, marker_db, min_overlap=1, top_n=50)
 
@@ -1102,8 +1104,8 @@ summary = {
     "within_compartment_connectivity_pct": round(same_comp/total_edges*100, 1),
     "multimodal_pca_pc1_pct": round(pca_mm.explained_variance_ratio_[0]*100, 1),
     "multimodal_pca_pc2_pct": round(pca_mm.explained_variance_ratio_[1]*100, 1),
-    "leiden_clusters_r05": n_clusters,
-    "leiden_resolutions_tested": [0.3, 0.5, 1.0],
+    "leiden_clusters_r03": n_clusters,
+    "leiden_resolutions_tested": [0.2, 0.3, 0.5, 1.0],
     "scaler_img": "scaler_img.pkl",
     "scaler_expr": "scaler_expr.pkl",
     "moranI_top_genes": list(moran_top5.index),

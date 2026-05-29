@@ -181,10 +181,10 @@ print('PHASE 7: Leiden Clustering')
 print('=' * 60)
 
 sc.pp.neighbors(adata, n_neighbors=15, n_pcs=min(10, pca_r.shape[1]))
-for res in [0.3, 0.5, 1.0]:
+for res in [0.2, 0.3, 0.5, 1.0]:
     sc.tl.leiden(adata, resolution=res, flavor='igraph',
                  n_iterations=2, key_added=f'leiden_r{res}')
-adata.obs['leiden'] = adata.obs['leiden_r0.5']
+adata.obs['leiden'] = adata.obs['leiden_r0.3']
 n_clusters = adata.obs['leiden'].nunique()
 print(f'  Clusters (r=0.5): {n_clusters}')
 
@@ -220,7 +220,7 @@ print('  rank_genes_groups OK')
 
 # Load annotation module (importlib due to hyphen in path)
 am = importlib.import_module('skills.cell-annotator.annotate')
-mdb = am.load_marker_db('data/cell_markers/panglao_markers.tsv')
+mdb = am.load_marker_db('data/cell_markers/panglao_markers.tsv', tissue_context='breast')
 n_entries = sum(len(v) for v in mdb.values())
 print(f'  Marker DB: {n_entries} entries, {len(mdb)} types')
 
