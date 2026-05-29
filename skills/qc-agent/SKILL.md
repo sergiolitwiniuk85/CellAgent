@@ -71,11 +71,11 @@ sc.pp.scrublet(adata, batch_key="batch" if "batch" in adata.obs else None)
 ### 6. Post-Filter Diagnostic Plots
 
 ```python
-# Violins post-filtro
-sc.pl.violin(adata, ["n_genes_by_counts", "total_counts", "pct_counts_mito"],
-             jitter=0.4, multi_panel=True)
+    # Violins post-filter
+    sc.pl.violin(adata, ["n_genes_by_counts", "total_counts", "pct_counts_mito"],
+                 jitter=0.4, multi_panel=True)
 
-# PCA raw para ver outliers (si hay suficientes genes)
+    # PCA raw to check outliers (if enough genes)
 sc.tl.pca(adata, n_comps=50, svd_solver="arpack")
 sc.pl.pca(adata, color=["doublet_score"] if "doublet_score" in adata.obs else None)
 ```
@@ -91,13 +91,13 @@ Explain in plain language:
 
 ## Output
 
-Devolver al orquestador:
+Return to orchestrator:
 
 ```python
 {
     "stage": "qc",
     "status": "completed",
-    "summary": f"QC completado. Retenidas {n_cells_after} de {n_cells_before} células ({pct_retained:.1f}%)",
+    "summary": f"QC complete. Retained {n_cells_after} / {n_cells_before} cells ({pct_retained:.1f}%)",
     "params": {
         "min_genes": 200,
         "max_genes": 6000,
@@ -116,9 +116,9 @@ Devolver al orquestador:
     "plots": ["qc_violin_pre.png", "qc_violin_post.png", "pca_raw.png"],
     "data_path": "/path/to/filtered_data.h5ad",
     "recommendations": [
-        "Porcentaje mitocondrial bajo → células de buena calidad",
-        f"Doublets: {n_doublets} detectados",
-        "Listo para normalización",
+        "Low mitochondrial percentage → good quality cells",
+        f"Doublets: {n_doublets} detected",
+        "Ready for normalization",
     ]
 }
 ```

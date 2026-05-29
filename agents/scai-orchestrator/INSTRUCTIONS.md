@@ -12,13 +12,36 @@ Your mission: **make scverse accessible for everyone**.
 
 ## Supported Pipeline
 
+### Pipeline estándar (unimodal RNA-seq)
+
 ```
 data-agent → qc-agent → normalize-agent → cluster-agent → report-agent → trace-agent
-         ↘ integration-agent ↗              ↑
-            (multimodal)          spatial-agent
 ```
 
-**trace-agent es SIEMPRE la etapa final**. Todo análisis completo debe generar su documento de trazabilidad.
+### Pipeline espacial (Xenium, Visium, MERFISH)
+
+```
+data-agent → qc-agent → normalize-agent → image-agent → spatial-agent → cluster-agent → report-agent → trace-agent
+```
+
+### Pipeline multimodal (CITE-seq, RNA+ATAC)
+
+```
+data-agent → qc-agent → normalize-agent → integration-agent → cluster-agent → report-agent → trace-agent
+```
+
+### Pipeline completa (espacial + multimodal)
+
+```
+data-agent → qc-agent → normalize-agent → image-agent → spatial-agent → integration-agent → cluster-agent → report-agent → trace-agent
+```
+
+### Reglas del pipeline
+
+1. **report-agent SIEMPRE va antes de trace-agent** — no hay excepción
+2. **trace-agent es SIEMPRE la etapa final** — todo análisis completo debe generar su documento de trazabilidad
+3. **Nunca terminar un análisis sin report + trace** — son obligatorios, no opcionales
+4. Cada etapa delega al agente especialista usando `task()` con el skill correspondiente
 
 ## Workflow
 
@@ -39,18 +62,20 @@ Before acting, determine:
 
 ### 3. Delegate
 
-Load the matching skill and delegate to a specialist sub-agent using `task()`:
+Load the matching skill and delegate to a specialist sub-agent using `task()`. 
+**El orden sigue el pipeline según el tipo de datos** (ver arriba).
 
-| Stage | Skill | Sub-agent type |
-|-------|-------|----------------|
-| Load data | `skills/data-agent/SKILL.md` | `general` |
-| Quality control | `skills/qc-agent/SKILL.md` | `general` |
-| Normalization | `skills/normalize-agent/SKILL.md` | `general` |
-| Clustering | `skills/cluster-agent/SKILL.md` | `general` |
-| Multimodal integration | `skills/integration-agent/SKILL.md` | `general` |
-| Spatial analysis | `skills/spatial-agent/SKILL.md` | `general` |
-| Report | `skills/report-agent/SKILL.md` | `general` |
-| Traceability | `skills/trace-agent/SKILL.md` | `general` |
+| Stage | Skill | Sub-agent type | ¿Obligatorio? |
+|-------|-------|----------------|---------------|
+| Load data | `skills/data-agent/SKILL.md` | `general` | ✅ Siempre |
+| Quality control | `skills/qc-agent/SKILL.md` | `general` | ✅ Siempre |
+| Normalization | `skills/normalize-agent/SKILL.md` | `general` | ✅ Siempre |
+| Image features | `skills/image-agent/SKILL.md` | `general` | 🔶 Si hay imágenes |
+| Spatial analysis | `skills/spatial-agent/SKILL.md` | `general` | 🔶 Si es espacial |
+| Multimodal integration | `skills/integration-agent/SKILL.md` | `general` | 🔶 Si es multimodal |
+| Clustering | `skills/cluster-agent/SKILL.md` | `general` | ✅ Siempre |
+| **Report** | `skills/report-agent/SKILL.md` | `general` | **✅ SIEMPRE** |
+| **Traceability** | `skills/trace-agent/SKILL.md` | `general` | **✅ SIEMPRE (final)** |
 
 ### 4. Review
 
@@ -72,22 +97,32 @@ mem_save(
 )
 ```
 
-### 6. Trace — Documento de Trazabilidad (OBLIGATORIO)
+### 6. Report + Trace — Etapas Finales OBLIGATORIAS
 
-**Siempre que el pipeline llegue a su fin** (report-agent completado, o el usuario confirma que no quiere más etapas), ejecutar el trace-agent como etapa final obligatoria.
+El pipeline **SIEMPRE** termina con estas dos etapas, en este orden:
 
-El trace-agent genera un documento markdown autocontenido con:
+#### 6a. Report (report-agent)
+
+Genera un **reporte ejecutivo** en Markdown + PDF con:
+- Resumen ejecutivo (células, genes, clusters)
+- Resultados de cada etapa (QC, normalización, clustering, etc.)
+- Tablas de parámetros
+- Interpretación biológica preliminar (tipos celulares sugeridos)
+- Plots embebidos
+- Recomendaciones
+
+#### 6b. Trace (trace-agent)
+
+Genera el **documento de trazabilidad** — registro forense del análisis:
 - **Cada etapa** ejecutada, en orden cronológico
-- **Comandos usados** (APIs de scanpy/muon/squidpy)
+- **Comandos usados** (APIs de scanpy/muon/squidpy/skimage)
 - **Parámetros exactos** con sus valores y justificación
 - **Resultados numéricos** (células antes/después, clusters, etc.)
 - **Paths a plots** generados
 - **Versiones de librerías** (reproducibilidad)
 - **Decisiones** tomadas durante el análisis
 
-Este documento es el **registro forense** del análisis. Sin él, el análisis no está completo.
-
-> **Regla dura**: No cerrar la sesión sin generar el trace. Si el usuario quiere salir antes, advertir que no se generó trazabilidad.
+> **Regla dura**: No cerrar la sesión sin generar REPORT + TRACE. Si el usuario quiere salir antes, advertir que el análisis no está completo y falta documentación obligatoria. Sin estos dos documentos, el análisis no existe para propósitos de publicación o auditoría.
 
 ## Cross-Session Learning
 
@@ -139,3 +174,4 @@ The shared state between stages is defined in `skills/_shared/pipeline-state.md`
 - After EACH stage, ask if they want to continue or adjust
 - Save important decisions to engram
 - **NEVER delete, overwrite, or modify original input files** (.h5ad, .h5mu, .zarr, or any other format). All filtering, subsetting, and transformation MUST create NEW output files. The only person who deletes or moves original data is the human from the CLI.
+- **REPORT + TRACE son SIEMPRE obligatorios al final del pipeline.** Sin reporte ejecutivo y documento de trazabilidad, el análisis no está completo. Si el usuario quiere terminar antes, advertirle que falta documentación.

@@ -1,7 +1,10 @@
 output/
+test_data_2/
 *.h5ad
 *.h5mu
 *.zarr
+*.zip
+*.tar.gz
 __pycache__/
 *.pyc
 .env

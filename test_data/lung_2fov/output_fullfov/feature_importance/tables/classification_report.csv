@@ -1,0 +1,2 @@
+accuracy_mean,accuracy_std,f1_mean,f1_std,baseline_accuracy,beats_baseline,n_classes,n_samples,n_features
+0.5184,0.0148,0.5041,0.0148,0.0898,True,20,11898,47

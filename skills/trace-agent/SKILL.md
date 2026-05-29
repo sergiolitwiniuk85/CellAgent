@@ -110,6 +110,32 @@ scanpy.pp.filter_cells(adata, max_genes=6000)
 
 ---
 
+#### Image Processing Log (if image-agent was executed)
+
+**Images Processed**:
+| Image Key | Shape (C, Y, X) | Dtype | Features Count |
+|-----------|-----------------|-------|----------------|
+| {key} | {shape} | {dtype} | {n_features} |
+
+**Parameters by Level**:
+- Level 1 (Morphology): `min_cell_area={value}`, `n_glcm_distances={value}`
+- Level 2 (Microenvironment): `density_radius={value}`, `n_neighbors={value}`, `density_radii={value}`
+- Level 3 (Compartments): `otsu_bins={value}`, `closing_disk_radius={value}`
+
+**Timing per Image per Level**:
+| Level | Image | Duration (s) |
+|-------|-------|--------------|
+| Morphology | {image_key} | {seconds} |
+| Microenvironment | {image_key} | {seconds} |
+| Compartments | {image_key} | {seconds} |
+
+**Generated Plots**:
+- `output/{session_id}/plots/features_pca.png`
+- `output/{session_id}/plots/feature_distributions.png`
+- `output/{session_id}/plots/spatial_pc1.png`
+
+---
+
 ### Complete Parameter Table
 
 | Stage | Parameter | Value | Recommended range |

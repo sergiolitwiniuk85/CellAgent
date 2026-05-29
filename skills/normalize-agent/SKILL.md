@@ -79,6 +79,7 @@ sc.pp.scale(adata, max_value=10)
 | Smart-seq2 | All | 1e6 | Full-length, not 10x |
 | ATAC | 0 (N/A) | N/A | Use LSI (muon.atac) |
 | Protein (CITE) | 0 (N/A) | N/A | CLR transform |
+| Targeted panels (<1000 genes) | All (skip HVG) | 1e4 | Xenium, CosMx panels (250–500 genes) |
 
 ## Validation
 
@@ -125,3 +126,4 @@ print(f"HVG selected: {adata.var['highly_variable'].sum()}")
 - Do not subset the object to only HVG unless the user explicitly asks
 - Save a copy before scaling (scaling is irreversible)
 - The only person who removes original data is the human from the CLI.
+- **If `adata.n_vars < 1000`**: use ALL genes, do NOT call `highly_variable_genes` (targeted panel). Only select HVGs when `adata.n_vars >= 1000`.
