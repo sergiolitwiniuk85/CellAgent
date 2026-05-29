@@ -9,6 +9,9 @@ Behind the scenes, an orchestrator delegates each stage to a specialist agent: d
 - **Unimodal RNA-seq**: data → QC → normalize → cluster → markers → report
 - **Multimodal integration**: RNA + ATAC + protein via muon (WNN, MOFA+)
 - **Spatial analysis**: Xenium, Visium, MERFISH via SpatialData + Squidpy
+- **Image morphology pipeline**: extract cell morphology, GLCM texture, and tissue compartments from tissue images (Xenium morphology.ome.tif) — classical CV, no GPU needed
+- **Multimodal image + expression integration**: hexagonal binning (50µm), shared kNN propagation, tissue compartment scaffold, Leiden clustering on the joint multimodal space
+- **Feature importance**: interpret what drives multimodal clusters with Random Forest classifiers, permutation importance, per-cluster signatures, and spatial expression overlays
 - **Cross-session memory**: remembers parameters and decisions across analyses via Engram
 - **Traceability**: every analysis produces a forensic document with all commands and parameters
 
@@ -112,6 +115,10 @@ Then tell CellAgent what you want. Examples:
 > *"Load this CITE-seq data and integrate RNA with protein"*
 >
 > *"I have a Xenium dataset, run spatial analysis"*
+> *
+> *"I have a Xenium dataset, run the full multimodal image + expression pipeline"*
+> *
+> *"Which features drive my spatial clusters? Run feature importance"*
 
 The orchestrator will guide you through every step, showing plots and results, and asking for confirmation before proceeding.
 
@@ -218,6 +225,28 @@ Agent: "Let me load the SpatialData zarr."
 Agent: "Spatial analysis done. Clusters show clear spatial segregation."
 ```
 
+### Example 4: Image + Expression Multimodal Integration (Xenium Full FOV)
+
+Tested on **Xenium Human Lung 2 FOV** (11,898 cells) and **Human Breast Cancer 2 FOV** (7,020 cells) with full-field-of-view coverage:
+
+```
+User:  "Run the full multimodal image + expression pipeline on my Xenium data"
+Agent: "Loading morphology and expression data."
+
+  → Level 1 — Cell Morphology: regionprops (area, eccentricity, solidity, etc.)
+  → Level 2 — Microenvironment: NND, cell density
+  → Level 3 — Tissue Compartments: Otsu thresholding → epithelium/necrosis/stroma/border
+  → Merge: 541 genes + 18 image features per cell
+  → Strategy 1 — Hexagonal Grid (50µm): aggregate cells into spatial bins
+  → Strategy 2 — Shared kNN (k=10): propagate features across spatial graph
+  → Strategy 3 — Compartment Scaffold: stratify by tissue histology
+  → Leiden Clustering (res=0.3/0.5/1.0) on multimodal PCA
+  → Feature Importance: RF classifier, permutation importance, per-cluster signatures
+
+Agent: "Full FOV complete. 20 multimodal clusters found. compartment_boundary_distance
+       is the top predictor (45.6% permutation importance). Report ready."
+```
+
 ## How It Works
 
 ```
@@ -271,6 +300,7 @@ CellAgent/
 │   ├── qc-agent/SKILL.md         # Quality control and filtering
 │   ├── normalize-agent/SKILL.md  # Normalization and HVG
 │   ├── cluster-agent/SKILL.md    # PCA, UMAP, Leiden, markers
+│   ├── image-agent/SKILL.md      # Image morphology pipeline (classical CV)
 │   ├── integration-agent/SKILL.md# Multimodal integration (muon)
 │   ├── spatial-agent/SKILL.md    # Spatial analysis (Squidpy)
 │   ├── report-agent/SKILL.md     # Executive report
@@ -283,9 +313,10 @@ CellAgent/
 ## Roadmap
 
 - **Phase 1** ✅ Unimodal pipeline (data → QC → normalize → cluster → report → trace)
-- **Phase 2** 🔄 Multimodal integration with muon (WNN, MOFA+)
-- **Phase 3** ⏳ Spatial analysis with SpatialData and Squidpy
-- **Phase 4** ⏳ Full multimodal + spatial pipeline with cross-session learning
+- **Phase 2** ✅ Multimodal integration with muon (WNN, MOFA+)
+- **Phase 3** ✅ Spatial analysis with SpatialData and Squidpy
+- **Phase 4** ✅ Image morphology + expression integration (hex grid, kNN, compartments, Leiden)
+- **Phase 5** 🔄 Feature importance & interpretability (RF, permutation importance, per-cluster signatures)
 
 ## License
 
