@@ -2,18 +2,18 @@
 
 CellAgent lets you run complete single-cell analyses (RNA-seq, multimodal, spatial) by describing what you want in plain English. No need to memorize scanpy, muon, or squidpy APIs — just tell CellAgent what you need, and it guides you step by step.
 
-Behind the scenes, an orchestrator delegates each stage to a specialist agent: data loading, QC, normalization, clustering, multimodal integration, spatial analysis, and reporting. Every analysis produces an **executive report** and a **full traceability document** with all commands, parameters, and results — guaranteed reproducibility.
+Behind the scenes, an orchestrator delegates each stage to a specialist agent: data loading, QC, normalization, clustering, multimodal integration, spatial analysis, image processing, and reporting. **Every analysis ALWAYS ends with two mandatory documents: an executive report (Markdown + PDF) and a full traceability document** with all commands, parameters, and results — guaranteed reproducibility.
 
 ## Features
 
-- **Unimodal RNA-seq**: data → QC → normalize → cluster → markers → report
+- **Unimodal RNA-seq**: data → QC → normalize → cluster → markers → **report** → **trace**
 - **Multimodal integration**: RNA + ATAC + protein via muon (WNN, MOFA+)
 - **Spatial analysis**: Xenium, Visium, MERFISH via SpatialData + Squidpy
 - **Image morphology pipeline**: extract cell morphology, GLCM texture, and tissue compartments from tissue images (Xenium morphology.ome.tif) — classical CV, no GPU needed
 - **Multimodal image + expression integration**: hexagonal binning (50µm), shared kNN propagation, tissue compartment scaffold, Leiden clustering on the joint multimodal space
 - **Feature importance**: interpret what drives multimodal clusters with Random Forest classifiers, permutation importance, per-cluster signatures, and spatial expression overlays
 - **Cross-session memory**: remembers parameters and decisions across analyses via Engram
-- **Traceability**: every analysis produces a forensic document with all commands and parameters
+- **Report + Traceability**: every analysis produces an executive report (PDF) AND a forensic traceability document with all commands, parameters, library versions, and decisions
 
 ## Installation
 

@@ -87,6 +87,34 @@ sq.pl.co_occurrence(sdata["table"], cluster_key="leiden")
 # sq.gr.ligand_receptor(sdata["table"], ...)
 ```
 
+### 6. Spatial Autocorrelation (after clustering)
+
+```python
+# Moran's I — global spatial autocorrelation
+sq.gr.spatial_autocorr(adata, mode="moran")
+
+# Geary's C — local spatial variation (more sensitive)
+sq.gr.spatial_autocorr(adata, mode="geary")
+
+# Results stored in adata.uns
+print(adata.uns['moranI'].head())
+print(adata.uns['gearyC'].head())
+```
+
+**Output structure** (`adata.uns['moranI']` and `adata.uns['gearyC']`):
+
+| Column | Description |
+|--------|-------------|
+| `I` / `C` | Moran's I / Geary's C statistic |
+| `pval_sim` | Permutation-based p-value |
+| `pval_z_sim` | Z-score based p-value |
+| `var_n` | Variance under normality |
+| `var_z` | Variance under randomization |
+
+**Interpretation**:
+- **Moran's I**: Positive values → clustering (similar values near each other). Values near zero → random spatial distribution. Negative → dispersion.
+- **Geary's C**: Values < 1 → positive spatial autocorrelation. Values > 1 → negative autocorrelation. More sensitive to local variation than Moran's I.
+
 ## Validación
 
 ```python

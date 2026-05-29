@@ -31,7 +31,9 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import RegularPolygon
 from sklearn.decomposition import PCA
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import StandardScaler
 from pathlib import Path
+import joblib
 from skimage.draw import polygon as sk_polygon
 import warnings
 import time
@@ -361,9 +363,17 @@ expr_per_cell = pd.DataFrame({
     "expr_mean": expr_crop.mean(axis=1),                 # mean expression
 })
 
-# Top variable genes (by variance across cells)
-gene_var = np.var(expr_crop, axis=0)
-top_var_genes_idx = np.argsort(gene_var)[-20:][::-1]
+# Top variable genes — adaptive: all genes for targeted panels (<1000), top 2000 HVGs otherwise
+n_genes_total = int(n_genes)
+if n_genes_total >= 1000:
+    n_top_var = 2000
+    gene_var = np.var(expr_crop, axis=0)
+    top_var_genes_idx = np.argsort(gene_var)[-n_top_var:][::-1]
+    print(f"  Whole transcriptome ({n_genes_total} genes) → selecting top {n_top_var} HVGs")
+else:
+    n_top_var = n_genes_total
+    top_var_genes_idx = np.arange(n_top_var)
+    print(f"  Targeted panel ({n_genes_total} genes) → using ALL genes")
 top_var_genes = [gene_names[i] for i in top_var_genes_idx]
 print(f"  Top 5 variable genes: {top_var_genes[:5]}")
 
@@ -549,8 +559,17 @@ for i in range(len(merged_full)):
     neighbors = indices[i]
     expr_smoothed[i] = expr_matrix[neighbors].mean(axis=0)
 
-# --- Build multimodal matrix: image features + smoothed expression ---
-multimodal_matrix = np.hstack([image_feat_smoothed, expr_smoothed])
+# --- Scale each modality independently before fusion ---
+scaler_img = StandardScaler()
+img_scaled = scaler_img.fit_transform(image_feat_smoothed)
+scaler_expr = StandardScaler()
+expr_scaled = scaler_expr.fit_transform(expr_smoothed)
+
+joblib.dump(scaler_img, OUT / "scaler_img.pkl")
+joblib.dump(scaler_expr, OUT / "scaler_expr.pkl")
+print(f"  Saved scalers: scaler_img.pkl, scaler_expr.pkl")
+
+multimodal_matrix = np.hstack([img_scaled, expr_scaled])
 
 print(f"  Graph edges: {len(merged_full)} × {N_NEIGHBORS_KNN} = "
       f"{len(merged_full) * N_NEIGHBORS_KNN}")
@@ -947,7 +966,35 @@ cluster_df.to_csv(OUT / "tables" / "leiden_clusters.csv", index=False)
 print(f"  Saved: leiden_clusters.csv ({len(cluster_df)} cells)")
 
 # ════════════════════════════════════════════════════════════════════════════
-# PHASE 8: SUMMARY
+# PHASE 8: Spatial Autocorrelation
+# ════════════════════════════════════════════════════════════════════════════
+print("\n" + "─" * 70)
+print("PHASE 8: Spatial Autocorrelation (Moran's I & Geary's C)")
+print("─" * 70)
+
+import squidpy as sq
+
+sq.gr.spatial_autocorr(adata, mode="moran")
+sq.gr.spatial_autocorr(adata, mode="geary")
+
+moran_top5 = adata.uns['moranI'].sort_values('I', ascending=False).head(5)
+geary_top5 = adata.uns['gearyC'].sort_values('C', ascending=True).head(5)
+
+print("\n  Top 5 Moran's I genes (spatially autocorrelated):")
+for _, row in moran_top5.iterrows():
+    print(f"    {row.name}: I={row['I']:.4f}, pval_sim={row['pval_sim']:.6f}")
+
+print("\n  Top 5 Geary's C genes (spatially variable):")
+for _, row in geary_top5.iterrows():
+    print(f"    {row.name}: C={row['C']:.4f}, pval_sim={row['pval_sim']:.6f}")
+
+print(f"\n  Moran I shape: {adata.uns['moranI'].shape}")
+print(f"  Columns: {list(adata.uns['moranI'].columns)}")
+print(f"  Geary C shape: {adata.uns['gearyC'].shape}")
+print(f"  Columns: {list(adata.uns['gearyC'].columns)}")
+
+# ════════════════════════════════════════════════════════════════════════════
+# PHASE 9: SUMMARY
 # ════════════════════════════════════════════════════════════════════════════
 print("\n" + "─" * 70)
 print("SUMMARY")
@@ -961,7 +1008,7 @@ print(f"""
 ├──────────────────────────────────────────────────────────────┤
 │  Full FOV:             {w}×{h} px                              │
 │  Cells processed:      {n_cells_rasterized}                                   │
-│  Features extracted:   {len(feature_cols_final)} (image) + {20} (RNA top genes)    │
+│  Features extracted:   {len(feature_cols_final)} (image) + {n_top_var} (RNA top genes)    │
 │  Hex bins:             {n_bins} (Ø={HEX_DIAMETER_MICRONS} µm)                    │
 │  kNN graph:            k={N_NEIGHBORS_KNN}, {
 len(merged_full) * N_NEIGHBORS_KNN} edges                     │
@@ -983,7 +1030,7 @@ summary = {
     "image_size_px": f"{w}×{h}",
     "cells_processed": n_cells_rasterized,
     "n_image_features": len(feature_cols_final),
-    "n_expression_genes": 20,
+    "n_expression_genes": n_top_var,
     "hex_bins": n_bins,
     "hex_diameter_um": HEX_DIAMETER_MICRONS,
     "knn_k": N_NEIGHBORS_KNN,
@@ -993,6 +1040,11 @@ summary = {
     "multimodal_pca_pc2_pct": round(pca_mm.explained_variance_ratio_[1]*100, 1),
     "leiden_clusters_r05": n_clusters,
     "leiden_resolutions_tested": [0.3, 0.5, 1.0],
+    "scaler_img": "scaler_img.pkl",
+    "scaler_expr": "scaler_expr.pkl",
+    "moranI_top_genes": list(moran_top5.index),
+    "gearyC_top_genes": list(geary_top5.index),
+    "spatial_autocorrelation": True,
     "total_time_s": round(t_total, 1),
 }
 with open(OUT / "summary.json", "w") as f:
