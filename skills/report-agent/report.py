@@ -66,7 +66,7 @@ def generate_report(output_dir: str | Path) -> str:
     lines.append('')
 
     # 1. Executive summary
-    lines.append('## 1. Executive Summary')
+    lines.append('## 1. Summary')
     lines.append('')
     lines.append(f'| Metric | Value |')
     lines.append(f'|--------|-------|')
