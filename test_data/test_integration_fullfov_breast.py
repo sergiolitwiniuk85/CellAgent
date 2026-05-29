@@ -552,7 +552,7 @@ for i in range(len(merged_full)):
 # --- Propagate expression through the same graph ---
 expr_matrix = merged_full[[c for c in merged_full.columns
                           if c.startswith('expr_') and c != 'expr_n_genes'
-                          and c != 'expr_total_counts']].values
+                          and c != 'expr_total_counts' and c != 'expr_mean']].values
 
 expr_smoothed = np.zeros_like(expr_matrix)
 for i in range(len(merged_full)):
@@ -897,6 +897,13 @@ sc.settings.verbosity = 0
 
 # Build AnnData from multimodal matrix
 adata = sc.AnnData(X=multimodal_matrix_clean)
+# Set feature names: image features + expression genes (prefixed)
+export_feat_names = list(feature_cols_final) + [f"expr_{g}" for g in top_var_genes]
+if len(export_feat_names) == adata.n_vars:
+    adata.var_names = export_feat_names
+else:
+    print(f"  ⚠ Feature name count mismatch: {len(export_feat_names)} names vs "
+          f"{adata.n_vars} vars. Names will be positional.")
 adata.obs['compartment'] = merged_full['compartment_label'].values
 adata.obs['cell_id'] = merged_full['cell_id'].values
 coords = merged_full[['cx_microns', 'cy_microns']].values
@@ -964,6 +971,59 @@ cluster_df = pd.DataFrame({
 })
 cluster_df.to_csv(OUT / "tables" / "leiden_clusters.csv", index=False)
 print(f"  Saved: leiden_clusters.csv ({len(cluster_df)} cells)")
+
+# ════════════════════════════════════════════════════════════════════════════
+# PHASE 7.5: Marker Genes & Cell Type Annotation
+# ════════════════════════════════════════════════════════════════════════════
+print("\n" + "─" * 70)
+print("PHASE 7.5: Marker Genes & Cell Type Annotation")
+print("─" * 70)
+
+# Compute DEGs per cluster using Wilcoxon rank-sum
+sc.tl.rank_genes_groups(
+    adata,
+    groupby="leiden",
+    method="wilcoxon",
+    n_genes=50,
+    key_added="rank_genes_groups",
+    use_raw=False,
+)
+
+# Extract top DEGs per cluster
+degs_df = sc.get.rank_genes_groups_df(adata, group=None)
+cluster_genes = {}
+for g, group in degs_df.groupby("group", observed=False):
+    raw_genes = group["names"].tolist()
+    # Keep only expression features (prefixed with "expr_"), strip prefix
+    clean_genes = [g.replace("expr_", "") for g in raw_genes if g.startswith("expr_")]
+    cluster_genes[str(g)] = clean_genes
+
+# Load marker database and annotate
+import importlib.util
+_spec = importlib.util.spec_from_file_location(
+    "annotate", "skills/cell-annotator/annotate.py")
+_annotate_mod = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_annotate_mod)
+
+marker_db = _annotate_mod.load_marker_db(
+    species="human", organ="all", canonical_only=True)
+annotations = _annotate_mod.annotate_clusters(
+    cluster_genes, marker_db, min_overlap=1, top_n=50)
+
+# Print annotation table
+print("\n  Cell Type Annotations:")
+print(_annotate_mod.format_annotation_table(annotations))
+
+# Save annotations
+with open(OUT / "tables" / "cell_type_annotations.json", "w") as f:
+    json.dump(annotations, f, indent=2)
+print(f"  Saved: cell_type_annotations.json")
+
+# Compute annotation summary stats
+n_assigned = sum(1 for a in annotations.values() if a["cell_type"] != "Unassigned")
+n_high_conf = sum(1 for a in annotations.values() if a["score"] >= 0.5)
+print(f"\n  Annotation summary: {n_assigned}/{len(annotations)} clusters assigned, "
+      f"{n_high_conf} high confidence")
 
 # ════════════════════════════════════════════════════════════════════════════
 # PHASE 8: Spatial Autocorrelation
@@ -1049,9 +1109,61 @@ summary = {
     "moranI_top_genes": list(moran_top5.index),
     "gearyC_top_genes": list(geary_top5.index),
     "spatial_autocorrelation": True,
+    "n_clusters_annotated": n_assigned,
+    "n_clusters_high_confidence": n_high_conf,
+    "cluster_annotations": {
+        k: {"cell_type": v["cell_type"], "score": v["score"]}
+        for k, v in annotations.items()
+    },
     "total_time_s": round(t_total, 1),
 }
 with open(OUT / "summary.json", "w") as f:
     json.dump(summary, f, indent=2)
 
-print(f"✅ Test complete. Results saved to {OUT}/")
+# ════════════════════════════════════════════════════════════════════════════
+# PHASE 10: Executive Report (Markdown + PDF)
+# ════════════════════════════════════════════════════════════════════════════
+print("\n" + "─" * 70)
+print("PHASE 10: Executive Report")
+print("─" * 70)
+
+rm = importlib.import_module('skills.report-agent.report')
+report_md = rm.generate_report(OUT)
+(OUT / "report.md").write_text(report_md)
+print(f"  Saved: report.md ({len(report_md)} chars)")
+
+# Generate PDF from markdown (requires pandoc + typst)
+import subprocess, sys
+try:
+    subprocess.run(["pandoc", "--version"], capture_output=True, check=True)
+    subprocess.run(["typst", "--version"], capture_output=True, check=True)
+    result = subprocess.run(
+        [sys.executable, "skills/report-agent/scripts/md_to_pdf.py",
+         str(OUT / "report.md"), "-o", str(OUT / "report.pdf"), "--quiet"],
+        capture_output=True, text=True
+    )
+    if result.returncode == 0:
+        pdf_size = (OUT / "report.pdf").stat().st_size / 1024
+        print(f"  Saved: report.pdf ({pdf_size:.0f} KB)")
+    else:
+        print(f"  ⚠ PDF generation failed: {result.stderr}")
+except (FileNotFoundError, subprocess.CalledProcessError) as e:
+    print(f"  ⚠ PDF generation unavailable (pandoc/typst not found): {e}")
+
+# ════════════════════════════════════════════════════════════════════════════
+# PHASE 11: Traceability Document
+# ════════════════════════════════════════════════════════════════════════════
+print("\n" + "─" * 70)
+print("PHASE 11: Traceability Document")
+print("─" * 70)
+
+tm = importlib.import_module('skills.trace-agent.trace')
+trace_md = tm.generate_trace(OUT)
+(OUT / "trace.md").write_text(trace_md)
+print(f"  Saved: trace.md ({len(trace_md)} chars)")
+
+print(f"\n{'=' * 70}")
+print(f"✅ Full FOV pipeline complete. Results in {OUT}/")
+print(f"   - report.md + report.pdf (executive report)")
+print(f"   - trace.md (traceability document)")
+print(f"{'=' * 70}")
