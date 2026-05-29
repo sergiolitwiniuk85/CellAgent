@@ -15,14 +15,14 @@ Load single-cell data from files and generate a complete dataset description: di
 
 ## Supported Formats
 
-| Formato | Librería | Objeto | Uso |
+| Format | Library | Object | Use |
 |---------|----------|--------|-----|
 | .h5ad | `scanpy` / `anndata` | `AnnData` | RNA-seq unimodal |
-| .h5mu | `mudata` | `MuData` | Multimodal (RNA+ATAC+proteína) |
-| .zarr | `spatialdata` | `SpatialData` | Datos espaciales (Xenium, Visium) |
-| .h5ad + imágenes | `scanpy` + `squidpy` | `AnnData` + `sdata` | Espacial legacy |
+| .h5mu | `mudata` | `MuData` | Multimodal (RNA+ATAC+protein) |
+| .zarr | `spatialdata` | `SpatialData` | Spatial data (Xenium, Visium) |
+| .h5ad + images | `scanpy` + `squidpy` | `AnnData` + `sdata` | Spatial legacy |
 
-## APIs Clave
+## Key APIs
 
 ```python
 import scanpy as sc
@@ -55,7 +55,7 @@ Always report:
 
 ## Output
 
-Devolver al orquestador:
+Return to orchestrator:
 
 ```python
 {
@@ -68,11 +68,11 @@ Devolver al orquestador:
         "layers": ["counts", "normalized"],
         "obs_columns": ["n_genes", "total_counts", "pct_mito"],
         "has_raw": True,
-        "modalities": None,  # o ["rna", "atac"] para MuData
+        "modalities": None,  # or ["rna", "atac"] for MuData
     },
     "recommendations": [
-        "Tiene pct_mito → QC con filtro mitocondrial recomendado",
-        "No tiene HVG → correr normalize-agent",
+        "Has pct_mito → QC with mitochondrial filter recommended",
+        "No HVG found → run normalize-agent",
     ]
 }
 ```

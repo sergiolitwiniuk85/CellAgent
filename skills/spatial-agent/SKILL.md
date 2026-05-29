@@ -19,10 +19,10 @@ Analyze spatial data (Xenium, Visium, MERFISH) using SpatialData for structure a
 import spatialdata as sd
 import squidpy as sq
 
-# SpatialData (formato moderno)
+# SpatialData (modern format)
 sdata = sd.read_zarr("path/to/data.zarr")
 
-# AnnData legacy (formato squidpy clásico)
+# AnnData legacy (classic squidpy format)
 adata = sc.read_h5ad("path/to/spatial_data.h5ad")
 ```
 
@@ -52,21 +52,21 @@ sdata.pl.render_points("transcripts", color="gene", groups="Vwf").pl.show()
 ### 2. Spatial Neighbors
 
 ```python
-# Calcular vecinos espaciales
+# Compute spatial neighbors
 sq.gr.spatial_neighbors(sdata["table"], coord_type="grid")  # Visium
 # o
 sq.gr.spatial_neighbors(sdata["table"], coord_type="generic")  # Xenium
 ```
 
-### 3. Análisis de Enriquecimiento de Vecindad
+### 3. Neighborhood Enrichment Analysis
 
 ```python
-# Cluster enrichment en espacio
+# Cluster enrichment in space
 sq.gr.nhood_enrichment(sdata["table"], cluster_key="leiden")
 sq.pl.nhood_enrichment(sdata["table"], cluster_key="leiden")
 ```
 
-### 4. Visualización Espacial
+### 4. Spatial Visualization
 
 ```python
 # Scatter espacial de clusters
@@ -76,7 +76,7 @@ sq.pl.spatial_scatter(sdata["table"], shape=None, color="leiden")
 sdata.pl.render_shapes("nucleus_boundaries", color="leiden").pl.show()
 ```
 
-### 5. Análisis de Interacción (opcional)
+### 5. Interaction Analysis (optional)
 
 ```python
 # Co-ocurrencia de tipos celulares
@@ -90,7 +90,7 @@ sq.pl.co_occurrence(sdata["table"], cluster_key="leiden")
 ### 6. Spatial Autocorrelation (after clustering)
 
 ```python
-# Prerequisite: compute spatial neighbors graph from coordinates
+# Pre-requisite: compute spatial neighbors graph from coordinates
 sq.gr.spatial_neighbors(adata, coord_type="generic", n_neighs=6)
 
 # Moran's I — global spatial autocorrelation
@@ -117,12 +117,12 @@ print(adata.uns['gearyC'].head())
 - **Moran's I**: Positive values → clustering (similar values near each other). Values near zero → random spatial distribution. Negative → dispersion.
 - **Geary's C**: Values < 1 → positive spatial autocorrelation. Values > 1 → negative autocorrelation. More sensitive to local variation than Moran's I.
 
-## Validación
+## Validation
 
 ```python
-print(f"Elementos: {list(sdata.attr_keys())}")
+print(f"Elements: {list(sdata.attr_keys())}")
 n_cells = sdata["table"].n_obs
-print(f"Células en tabla: {n_cells}")
+print(f"Cells in table: {n_cells}")
 print(f"Clusters: {sdata['table'].obs['leiden'].nunique()}")
 ```
 
@@ -132,15 +132,15 @@ print(f"Clusters: {sdata['table'].obs['leiden'].nunique()}")
 {
     "stage": "spatial",
     "status": "completed",
-    "summary": f"Análisis espacial completado: {n_cells} células, {n_clusters} clusters",
+    "summary": f"Spatial analysis complete: {n_cells} cells, {n_clusters} clusters",
     "n_elements": len(sdata.attr_keys()),
     "has_images": True,
     "n_cells": n_cells,
     "data_path": "/path/to/spatial_analysis.zarr",
     "plots": ["tissue_image.png", "spatial_clusters.png", "nhood_enrichment.png"],
     "recommendations": [
-        "Se observa segregación espacial de clusters",
-        "Revisar interacciones ligando-receptor entre regiones",
+        "Spatial cluster segregation observed",
+        "Review ligand-receptor interactions between regions",
     ]
 }
 ```
