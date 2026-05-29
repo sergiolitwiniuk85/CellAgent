@@ -974,6 +974,10 @@ print("─" * 70)
 
 import squidpy as sq
 
+# Compute spatial neighbors graph from spatial coordinates
+sq.gr.spatial_neighbors(adata, coord_type="generic", n_neighs=6)
+print(f"  Spatial neighbors graph: {adata.obsp['spatial_connectivities'].shape}")
+
 sq.gr.spatial_autocorr(adata, mode="moran")
 sq.gr.spatial_autocorr(adata, mode="geary")
 
@@ -982,11 +986,11 @@ geary_top5 = adata.uns['gearyC'].sort_values('C', ascending=True).head(5)
 
 print("\n  Top 5 Moran's I genes (spatially autocorrelated):")
 for _, row in moran_top5.iterrows():
-    print(f"    {row.name}: I={row['I']:.4f}, pval_sim={row['pval_sim']:.6f}")
+    print(f"    {row.name}: I={row['I']:.4f}, pval_norm={row['pval_norm']:.6f}")
 
 print("\n  Top 5 Geary's C genes (spatially variable):")
 for _, row in geary_top5.iterrows():
-    print(f"    {row.name}: C={row['C']:.4f}, pval_sim={row['pval_sim']:.6f}")
+    print(f"    {row.name}: C={row['C']:.4f}, pval_norm={row['pval_norm']:.6f}")
 
 print(f"\n  Moran I shape: {adata.uns['moranI'].shape}")
 print(f"  Columns: {list(adata.uns['moranI'].columns)}")

@@ -90,6 +90,9 @@ sq.pl.co_occurrence(sdata["table"], cluster_key="leiden")
 ### 6. Spatial Autocorrelation (after clustering)
 
 ```python
+# Prerequisite: compute spatial neighbors graph from coordinates
+sq.gr.spatial_neighbors(adata, coord_type="generic", n_neighs=6)
+
 # Moran's I — global spatial autocorrelation
 sq.gr.spatial_autocorr(adata, mode="moran")
 
@@ -106,10 +109,9 @@ print(adata.uns['gearyC'].head())
 | Column | Description |
 |--------|-------------|
 | `I` / `C` | Moran's I / Geary's C statistic |
-| `pval_sim` | Permutation-based p-value |
-| `pval_z_sim` | Z-score based p-value |
-| `var_n` | Variance under normality |
-| `var_z` | Variance under randomization |
+| `pval_norm` | p-value under normality assumption |
+| `var_norm` | Variance under normality |
+| `pval_norm_fdr_bh` | Benjamini-Hochberg corrected p-value |
 
 **Interpretation**:
 - **Moran's I**: Positive values → clustering (similar values near each other). Values near zero → random spatial distribution. Negative → dispersion.
